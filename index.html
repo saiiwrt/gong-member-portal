@@ -121,12 +121,51 @@
         .replace(/'/g, '&#039;');
     }
 
-    function formatDate(value) {
-      if (!value) return '-';
-      const d = new Date(value);
-      if (isNaN(d)) return value;
-      return d.toLocaleDateString('th-TH');
+  function formatDate(value) {
+  if (!value) return '-';
+
+  const str = String(value).trim();
+
+  // กรณีเป็นวันที่แบบ 3/4/2569 หรือ 03/04/2569
+  const slashMatch = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (slashMatch) {
+    const day = slashMatch[1].padStart(2, '0');
+    const month = slashMatch[2].padStart(2, '0');
+    const year = slashMatch[3];
+    return `${day}/${month}/${year}`;
+  }
+
+  // กรณีเป็น YYYY-MM-DD
+  const isoMatch = str.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (isoMatch) {
+    let year = parseInt(isoMatch[1], 10);
+    const month = isoMatch[2];
+    const day = isoMatch[3];
+
+    // ถ้าเป็น ค.ศ. ให้แสดงเป็น พ.ศ.
+    if (year < 2400) {
+      year += 543;
     }
+
+    return `${day}/${month}/${year}`;
+  }
+
+  // กรณีเป็น Date object หรือ string ที่ JS parse ได้
+  const d = new Date(value);
+  if (!isNaN(d)) {
+    let year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+
+    if (year < 2400) {
+      year += 543;
+    }
+
+    return `${day}/${month}/${year}`;
+  }
+
+  return str;
+}
 
     async function apiGet(params) {
       const url = new URL(API_BASE_URL);
