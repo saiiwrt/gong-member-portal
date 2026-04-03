@@ -216,6 +216,10 @@
 
       resultBox.textContent = result.message || '';
 
+if (result.debug) {
+  resultBox.textContent += '\n' + JSON.stringify(result.debug, null, 2);
+}
+
       if (result.success) {
         await loadMemberData();
       }
