@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>GONU Member Portal</title>
+  <title>GONU MEMBER</title>
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 
   <style>
@@ -13,9 +13,10 @@
       --text:#1f2937;
       --muted:#6b7280;
       --line:#e5e7eb;
-      --green:#06c755;
-      --green-soft:#e9f9ef;
-      --green-dark:#0f8f43;
+      --brand:#343434;
+      --brand-soft:#ececec;
+      --brand-text:#ffffff;
+      --soft:#f9fafb;
       --shadow:0 4px 18px rgba(0,0,0,.06);
       --radius:18px;
     }
@@ -44,12 +45,12 @@
     }
 
     .section-head{
-      background:var(--green-soft);
-      color:var(--green-dark);
+      background:var(--brand-soft);
+      color:#222;
       padding:14px 18px;
       font-weight:700;
       font-size:20px;
-      border-bottom:1px solid #d7f3e1;
+      border-bottom:1px solid #ddd;
     }
 
     .section-body{
@@ -57,8 +58,8 @@
     }
 
     .hero{
-      background:linear-gradient(135deg,#06c755,#0aa84c);
-      color:#fff;
+      background:var(--brand);
+      color:var(--brand-text);
       padding:22px 20px;
       border-radius:22px;
       box-shadow:var(--shadow);
@@ -69,6 +70,7 @@
       font-size:24px;
       font-weight:700;
       margin:0 0 6px;
+      letter-spacing:.5px;
     }
 
     .hero-sub{
@@ -99,7 +101,7 @@
     }
 
     .mini-box{
-      background:#f9fafb;
+      background:var(--soft);
       border:1px solid var(--line);
       border-radius:14px;
       padding:14px;
@@ -128,7 +130,7 @@
     }
 
     button{
-      background:var(--green);
+      background:#343434;
       color:#fff;
       border:none;
       font-weight:700;
@@ -202,8 +204,8 @@
       display:inline-block;
       padding:6px 12px;
       border-radius:999px;
-      background:var(--green-soft);
-      color:var(--green-dark);
+      background:#efefef;
+      color:#333;
       font-size:13px;
       font-weight:700;
     }
@@ -258,7 +260,7 @@
   <div id="memberSection" class="hidden">
 
     <div class="hero">
-      <h1 class="hero-title">GONU Member Portal</h1>
+      <h1 class="hero-title">GONU MEMBER</h1>
       <p class="hero-sub">ข้อมูลสมาชิกและประวัติการซื้อ</p>
     </div>
 
@@ -266,13 +268,6 @@
       <div class="section-head">ข้อมูลสมาชิก</div>
       <div class="section-body">
         <div id="memberInfo"></div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="section-head">สรุปสมาชิก</div>
-      <div class="section-body">
-        <div class="grid grid-2" id="summaryInfo"></div>
       </div>
     </div>
 
@@ -367,12 +362,10 @@ async function apiGet(params){
 
 async function loadMemberData(){
   setLoading('กำลังตรวจสอบข้อมูลสมาชิก...');
-
   const result = await apiGet({
     action:'member',
     lineUserId: currentLineUserId
   });
-
   renderData(result);
 }
 
@@ -409,17 +402,14 @@ function renderData(result){
         <div class="mini-label">รหัสสมาชิก</div>
         <div class="mini-value">${escapeHtml(customer.customerId || '-')}</div>
       </div>
-    </div>
-  `;
-
-  document.getElementById('summaryInfo').innerHTML = `
-    <div class="mini-box">
-      <div class="mini-label">จำนวนรายการซื้อ</div>
-      <div class="mini-value">${numberFormat(history.length)}</div>
-    </div>
-    <div class="mini-box">
-      <div class="mini-label">แต้มสะสม</div>
-      <div class="mini-value">${numberFormat(totalPoints)}</div>
+      <div class="mini-box">
+        <div class="mini-label">จำนวนรายการซื้อ</div>
+        <div class="mini-value">${numberFormat(history.length)}</div>
+      </div>
+      <div class="mini-box">
+        <div class="mini-label">แต้มสะสม</div>
+        <div class="mini-value">${numberFormat(totalPoints)}</div>
+      </div>
     </div>
   `;
 
