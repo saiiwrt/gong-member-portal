@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>GONU Member Portal</title>
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -13,6 +14,7 @@
       margin: 0;
       padding: 16px;
     }
+
     .card {
       background: #fff;
       border-radius: 16px;
@@ -20,10 +22,9 @@
       margin-bottom: 16px;
       box-shadow: 0 2px 10px rgba(0,0,0,.06);
     }
-    h1,h2 { margin-top: 0; }
+
     input, button {
       width: 100%;
-      box-sizing: border-box;
       padding: 12px;
       border-radius: 10px;
       border: 1px solid #ccc;
@@ -31,44 +32,31 @@
       margin-bottom: 12px;
       font-size: 16px;
     }
+
     button {
       background: #06c755;
       color: #fff;
       border: none;
       font-weight: bold;
     }
+
     .hidden { display: none; }
     .small { font-size: 14px; color: #666; }
-    .item {
-      border-top: 1px solid #eee;
-      padding-top: 10px;
-      margin-top: 10px;
-    }
-    .badge {
-      display: inline-block;
-      background: #eef8ef;
-      color: #1b5e20;
-      border-radius: 999px;
-      padding: 6px 10px;
-      font-size: 13px;
-      font-weight: bold;
-    }
-    .error {
-      color: #c62828;
-      white-space: pre-wrap;
-    }
+    .error { color: red; }
+
   </style>
 </head>
+
 <body>
+
   <div id="loading" class="card">
     <h2>กำลังโหลดข้อมูล...</h2>
-    <p class="small" id="loadingText">เริ่มต้นระบบ</p>
+    <p id="loadingText">เริ่มต้นระบบ</p>
   </div>
 
   <div id="linkSection" class="card hidden">
     <h2>เชื่อมบัญชีก่อนใช้งาน</h2>
-    <p class="small">กรอกเบอร์โทรและวันเดือนปีเกิดที่เคยใช้กับร้าน</p>
-    <input type="text" id="phone" placeholder="กรอกเบอร์โทร">
+    <input type="text" id="phone" placeholder="เบอร์โทร">
     <input type="date" id="birthDate">
     <button id="linkBtn">เชื่อมบัญชี</button>
     <div id="linkResult" class="small"></div>
@@ -76,7 +64,7 @@
 
   <div id="memberSection" class="hidden">
     <div class="card">
-      <h1>ข้อมูลสมาชิก</h1>
+      <h2>ข้อมูลสมาชิก</h2>
       <div id="memberInfo"></div>
     </div>
 
@@ -91,212 +79,128 @@
     </div>
   </div>
 
-  <script>
-    const LIFF_ID = '2009688951-wJWIj6F0';
-    const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbxqOq3DHuVVaqPp5ppmMs66JtkVVsPGZFHT7-TGCu1VgQnPmJRVLZzDgL9in2nTNu0/exec';
+<script>
 
-    let currentLineUserId = '';
+const LIFF_ID = '2009688951-wJWIj6F0';
+const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbxqOq3DHuVVaqPp5ppmMs66JtkVVsPGZFHT7-TGCu1VgQnPmJRVLZzDgL9in2nTNu0/exec';
 
-    function setLoading(text) {
-      document.getElementById('loading').classList.remove('hidden');
-      document.getElementById('loadingText').textContent = text;
-    }
+let currentLineUserId = '';
 
-    function showError(text) {
-      document.getElementById('loading').classList.remove('hidden');
-      document.getElementById('loading').innerHTML = `
-        <h2>เกิดข้อผิดพลาด</h2>
-        <p class="small error">${escapeHtml(text)}</p>
-      `;
-      document.getElementById('linkSection').classList.add('hidden');
-      document.getElementById('memberSection').classList.add('hidden');
-    }
-
-    function escapeHtml(str) {
-      return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
-    }
-
-  function formatDate(value) {
-  if (!value) return '-';
-
-  const str = String(value).trim();
-
-  // กรณีเป็นวันที่แบบ 3/4/2569 หรือ 03/04/2569
-  const slashMatch = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-  if (slashMatch) {
-    const day = slashMatch[1].padStart(2, '0');
-    const month = slashMatch[2].padStart(2, '0');
-    const year = slashMatch[3];
-    return `${day}/${month}/${year}`;
-  }
-
-  // กรณีเป็น YYYY-MM-DD
-  const isoMatch = str.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-  if (isoMatch) {
-    let year = parseInt(isoMatch[1], 10);
-    const month = isoMatch[2];
-    const day = isoMatch[3];
-
-    // ถ้าเป็น ค.ศ. ให้แสดงเป็น พ.ศ.
-    if (year < 2400) {
-      year += 543;
-    }
-
-    return `${day}/${month}/${year}`;
-  }
-
-  // กรณีเป็น Date object หรือ string ที่ JS parse ได้
-  const d = new Date(value);
-  if (!isNaN(d)) {
-    let year = d.getFullYear();
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-
-    if (year < 2400) {
-      year += 543;
-    }
-
-    return `${day}/${month}/${year}`;
-  }
-
-  return str;
-}
-
-    async function apiGet(params) {
-      const url = new URL(API_BASE_URL);
-      Object.keys(params).forEach(key => url.searchParams.set(key, params[key]));
-      const res = await fetch(url.toString());
-      return await res.json();
-    }
-
-    async function loadMemberData() {
-      setLoading('กำลังตรวจสอบข้อมูลสมาชิก...');
-      const result = await apiGet({
-        action: 'member',
-        lineUserId: currentLineUserId
-      });
-      renderData(result);
-    }
-
-    function renderData(result) {
-      document.getElementById('loading').classList.add('hidden');
-
-      if (!result.success) {
-        if ((result.message || '').includes('ยังไม่พบการผูกบัญชี')) {
-          document.getElementById('linkSection').classList.remove('hidden');
-          return;
-        }
-        showError(result.message || 'ไม่สามารถโหลดข้อมูลได้');
-        return;
-      }
-
-      document.getElementById('linkSection').classList.add('hidden');
-      document.getElementById('memberSection').classList.remove('hidden');
-
-      document.getElementById('memberInfo').innerHTML = `
-        <p><strong>ชื่อ:</strong> ${escapeHtml(result.customer.name || '-')}</p>
-        <p><strong>เบอร์โทร:</strong> ${escapeHtml(result.customer.phone || '-')}</p>
-        <p><strong>รหัส:</strong> ${escapeHtml(result.customer.customerId || '-')}</p>
-      `;
-
-      const latest = result.latest || {};
-      document.getElementById('latestInfo').innerHTML = `
-        <p><strong>วันที่:</strong> ${formatDate(latest.date)}</p>
-        <p><strong>กรอบ:</strong> ${escapeHtml(latest.glasses || '-')}</p>
-        <p><strong>เลนส์:</strong> ${escapeHtml(latest.lens || '-')}</p>
-        <p><strong>ค่าสายตาขวา:</strong> ${escapeHtml(latest.rxR || '-')}</p>
-        <p><strong>ค่าสายตาซ้าย:</strong> ${escapeHtml(latest.rxL || '-')}</p>
-        <p><strong>สิทธิ์ตรวจฟรี:</strong> <span class="badge">${escapeHtml(latest.recheck || '-')}</span></p>
-      `;
-
-      if (result.history && result.history.length > 0) {
-        let html = '';
-        result.history.slice().reverse().forEach(item => {
-          html += `
-            <div class="item">
-              <p><strong>วันที่:</strong> ${formatDate(item.date)}</p>
-              <p><strong>กรอบ:</strong> ${escapeHtml(item.glasses || '-')}</p>
-              <p><strong>เลนส์:</strong> ${escapeHtml(item.lens || '-')}</p>
-              <p><strong>ค่าสายตาขวา:</strong> ${escapeHtml(item.rxR || '-')}</p>
-              <p><strong>ค่าสายตาซ้าย:</strong> ${escapeHtml(item.rxL || '-')}</p>
-              <p><strong>Recheck:</strong> ${escapeHtml(item.recheck || '-')}</p>
-            </div>
-          `;
-        });
-        document.getElementById('historyInfo').innerHTML = html;
-      } else {
-        document.getElementById('historyInfo').innerHTML = `<p class="small">ยังไม่มีประวัติ</p>`;
-      }
-    }
-
-    async function linkAccount() {
-      const phone = document.getElementById('phone').value.trim();
-      const birthDate = document.getElementById('birthDate').value;
-      const resultBox = document.getElementById('linkResult');
-
-      if (!phone || !birthDate) {
-        resultBox.textContent = 'กรุณากรอกเบอร์โทรและวันเดือนปีเกิด';
-        return;
-      }
-
-      resultBox.textContent = 'กำลังเชื่อมบัญชี...';
-
-      const result = await apiGet({
-        action: 'link',
-        phone,
-        birthDate,
-        lineUserId: currentLineUserId
-      });
-
-      resultBox.textContent = result.message || '';
-
-if (result.debug) {
-  console.log(result.debug);
-}
-
-     if (result.success) {
-  document.getElementById('linkSection').classList.add('hidden');
+function setLoading(text){
   document.getElementById('loading').classList.remove('hidden');
-  setLoading('กำลังโหลดข้อมูลสมาชิก...');
-  await loadMemberData();
+  document.getElementById('loadingText').textContent = text;
 }
 
-    async function initApp() {
-      try {
-        setLoading('กำลังเริ่มต้น LIFF...');
-        await liff.init({ liffId: LIFF_ID });
+function showError(text){
+  document.getElementById('loading').classList.remove('hidden');
+  document.getElementById('loading').innerHTML = `<h2>เกิดข้อผิดพลาด</h2><p class="error">${text}</p>`;
+}
 
-        if (liff.isInClient()) {
-          setLoading('กำลังดึงโปรไฟล์ LINE...');
-          const profile = await liff.getProfile();
-          currentLineUserId = profile.userId;
-          await loadMemberData();
-          return;
-        }
+async function apiGet(params){
+  const url = new URL(API_BASE_URL);
+  Object.keys(params).forEach(k => url.searchParams.set(k, params[k]));
+  const res = await fetch(url);
+  return await res.json();
+}
 
-        if (!liff.isLoggedIn()) {
-          setLoading('กำลังพาไปล็อกอิน LINE...');
-          liff.login();
-          return;
-        }
+function formatDate(value){
+  if(!value) return '-';
+  const d = new Date(value);
+  let year = d.getFullYear();
+  if(year < 2400) year += 543;
+  return `${d.getDate()}/${d.getMonth()+1}/${year}`;
+}
 
-        setLoading('กำลังดึงโปรไฟล์ LINE...');
-        const profile = await liff.getProfile();
-        currentLineUserId = profile.userId;
-        await loadMemberData();
+async function loadMemberData(){
+  setLoading('กำลังโหลดข้อมูลสมาชิก...');
+  const result = await apiGet({
+    action:'member',
+    lineUserId: currentLineUserId
+  });
 
-      } catch (err) {
-        showError('LIFF error: ' + (err.message || String(err)));
-      }
+  if(!result.success){
+    if((result.message||'').includes('ยังไม่พบ')){
+      document.getElementById('loading').classList.add('hidden');
+      document.getElementById('linkSection').classList.remove('hidden');
+      return;
+    }
+    showError(result.message);
+    return;
+  }
+
+  document.getElementById('loading').classList.add('hidden');
+  document.getElementById('memberSection').classList.remove('hidden');
+
+  document.getElementById('memberInfo').innerHTML = `
+    <p>${result.customer.name}</p>
+    <p>${result.customer.phone}</p>
+  `;
+
+  document.getElementById('latestInfo').innerHTML = `
+    <p>${formatDate(result.latest.date)}</p>
+    <p>${result.latest.glasses}</p>
+    <p>${result.latest.lens}</p>
+  `;
+
+  let html='';
+  (result.history||[]).forEach(x=>{
+    html+=`<div>${formatDate(x.date)} - ${x.glasses}</div>`;
+  });
+
+  document.getElementById('historyInfo').innerHTML = html;
+}
+
+async function linkAccount(){
+  const phone = document.getElementById('phone').value;
+  const birthDate = document.getElementById('birthDate').value;
+  const resultBox = document.getElementById('linkResult');
+
+  if(!phone || !birthDate){
+    resultBox.textContent = 'กรอกข้อมูลให้ครบ';
+    return;
+  }
+
+  resultBox.textContent='กำลังเชื่อม...';
+
+  const result = await apiGet({
+    action:'link',
+    phone,
+    birthDate,
+    lineUserId: currentLineUserId
+  });
+
+  if(result.success){
+    document.getElementById('linkSection').classList.add('hidden');
+    await loadMemberData();
+  }else{
+    resultBox.textContent = result.message;
+  }
+}
+
+async function initApp(){
+  try{
+    setLoading('กำลังเริ่มต้น...');
+    await liff.init({liffId:LIFF_ID});
+
+    if(!liff.isLoggedIn()){
+      liff.login();
+      return;
     }
 
-    document.getElementById('linkBtn').addEventListener('click', linkAccount);
-    initApp();
-  </script>
+    const profile = await liff.getProfile();
+    currentLineUserId = profile.userId;
+
+    await loadMemberData();
+
+  }catch(e){
+    showError(e.message);
+  }
+}
+
+document.getElementById('linkBtn').addEventListener('click', linkAccount);
+initApp();
+
+</script>
+
 </body>
 </html>
