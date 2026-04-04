@@ -50,12 +50,12 @@
     }
 
     .section-head{
-      background:var(--brand-soft);
-      color:#222;
+      background:var(--history-head);
+      color:#fff;
       padding:14px 18px;
       font-weight:700;
       font-size:20px;
-      border-bottom:1px solid #ddd;
+      border-bottom:1px solid #5e5e5e;
     }
 
     .history-head{
@@ -106,45 +106,108 @@
       font-size:14px;
     }
 
-    .grid{
-      display:grid;
-      gap:12px;
+    .link-desc{
+      color:#6b7280;
+      font-size:15px;
+      line-height:1.7;
+      margin:0 0 18px;
     }
 
-    .grid-2{
-      grid-template-columns:1fr 1fr;
-    }
-
-    .mini-box{
-      background:var(--soft);
-      border:1px solid var(--line);
-      border-radius:14px;
-      padding:14px;
-    }
-
-    .mini-label{
-      font-size:13px;
-      color:var(--muted);
-      margin-bottom:6px;
-    }
-
-    .mini-value{
-      font-size:20px;
-      font-weight:700;
-      line-height:1.2;
-    }
-
-    input, button{
-      width:100%;
-      padding:14px 16px;
-      border-radius:14px;
-      border:1px solid #d1d5db;
-      font-size:18px;
-      margin-top:8px;
+    .field-group{
       margin-bottom:14px;
     }
 
+    .field-label{
+      display:block;
+      font-size:14px;
+      font-weight:700;
+      color:#4b5563;
+      margin-bottom:8px;
+    }
+
+    .field-hint{
+      font-size:12px;
+      color:#8b929b;
+      margin-top:6px;
+      padding-left:4px;
+      line-height:1.5;
+    }
+
+    .form-input,
     button{
+      width:100%;
+      border-radius:14px;
+      font-size:18px;
+    }
+
+    .form-input{
+      padding:14px 16px;
+      border:1px solid #d1d5db;
+      background:#fff !important;
+      color:#111827;
+      outline:none;
+      box-shadow:none;
+      appearance:none;
+      -webkit-appearance:none;
+      margin:0;
+    }
+
+    .form-input::placeholder{
+      color:#9ca3af;
+    }
+
+    .form-input:focus{
+      border-color:#9ca3af;
+      box-shadow:0 0 0 2px rgba(0,0,0,.04);
+    }
+
+    .date-wrap{
+      position:relative;
+    }
+
+    .date-input{
+      min-height:56px;
+      line-height:1.2;
+      cursor:pointer;
+      padding-right:48px;
+      background:#fff !important;
+      color:#111827 !important;
+    }
+
+    input[type="date"]{
+      background:#fff !important;
+      color:#111827 !important;
+    }
+
+    input[type="date"]::-webkit-date-and-time-value{
+      text-align:left;
+      color:#111827;
+    }
+
+    input[type="date"]::-webkit-datetime-edit{
+      color:#111827;
+    }
+
+    input[type="date"]::-webkit-calendar-picker-indicator{
+      opacity:1;
+      cursor:pointer;
+    }
+
+    .date-wrap::after{
+      content:"📅";
+      position:absolute;
+      right:16px;
+      top:50%;
+      transform:translateY(-50%);
+      font-size:18px;
+      pointer-events:none;
+      opacity:.7;
+    }
+
+    button{
+      padding:14px 16px;
+      margin-top:6px;
+      margin-bottom:0;
       background:#191919;
       color:#fff;
       border:none;
@@ -355,11 +418,34 @@
   <div id="linkSection" class="card hidden">
     <div class="section-head">เชื่อมต่อบัญชี</div>
     <div class="section-body">
-      <p class="muted">กรุณากรอกรายละเอียดเบอร์โทรศัพท์และวันเดือนปีเกิดที่เคยให้ไว้กับทางร้าน</p>
-      <input type="text" id="phone" placeholder="เบอร์โทร">
-      <input type="date" id="birthDate">
+      <p class="link-desc">กรุณากรอกรายละเอียดเบอร์โทรศัพท์และวันเดือนปีเกิดที่เคยให้ไว้กับทางร้าน</p>
+
+      <div class="field-group">
+        <input
+          type="text"
+          id="phone"
+          class="form-input"
+          placeholder="เบอร์โทรศัพท์"
+          inputmode="tel"
+          autocomplete="tel"
+        >
+      </div>
+
+      <div class="field-group">
+        <label for="birthDate" class="field-label">วันเดือนปีเกิด</label>
+        <div class="date-wrap" onclick="focusBirthDate()">
+          <input
+            type="date"
+            id="birthDate"
+            class="form-input date-input"
+            autocomplete="bday"
+          >
+        </div>
+        <div class="field-hint">กดช่องนี้เพื่อเลือกวันเดือนปีเกิด</div>
+      </div>
+
       <button id="linkBtn">เชื่อมบัญชี</button>
-      <div id="linkResult" class="muted"></div>
+      <div id="linkResult" class="muted" style="margin-top:10px;"></div>
     </div>
   </div>
 
@@ -482,6 +568,21 @@ function getRecheckBadgeClass(status){
   return String(status).trim() === 'ใช้สิทธิ์เรียบร้อย'
     ? 'status-badge status-used'
     : 'status-badge status-unused';
+}
+
+function focusBirthDate(){
+  const el = document.getElementById('birthDate');
+  if(!el) return;
+
+  if(typeof el.showPicker === 'function'){
+    try{
+      el.showPicker();
+      return;
+    }catch(e){}
+  }
+
+  el.focus();
+  el.click();
 }
 
 async function apiGet(params){
