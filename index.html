@@ -59,7 +59,7 @@
     }
 
     .history-head{
-      background:#555;
+      background:var(--history-head);
       color:#fff;
       padding:14px 18px;
       font-weight:700;
@@ -222,6 +222,8 @@
 
     .status-badge{
       display:inline-flex;
+      align-items:center;
+      justify-content:center;
       padding:8px 14px;
       border-radius:999px;
       font-size:13px;
@@ -240,39 +242,12 @@
       color:var(--used-text);
     }
 
-    .benefit-box{
-      margin-top:14px;
-      background:#fff;
-      border:1px solid var(--line);
-      border-radius:14px;
-      padding:14px;
-    }
-
-    .benefit-row{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:10px;
-      flex-wrap:wrap;
-    }
-
-    .benefit-title{
-      font-size:14px;
-      font-weight:700;
-      color:var(--muted);
-    }
-
-    .benefit-note{
-      margin-top:8px;
-      font-size:13px;
-      color:var(--muted);
-      line-height:1.6;
-    }
-
     .benefit-btn{
-      margin-top:12px;
+      margin-top:8px;
       margin-bottom:0;
       font-size:15px;
+      padding:12px 14px;
+      border-radius:12px;
     }
 
     .empty{
@@ -303,34 +278,35 @@
 
     .modal-card{
       width:100%;
-      max-width:420px;
+      max-width:460px;
       background:#fff;
       border-radius:18px;
-      padding:20px;
+      padding:22px;
       box-shadow:0 18px 40px rgba(0,0,0,.16);
     }
 
     .modal-title{
-      font-size:18px;
+      font-size:20px;
       font-weight:700;
       color:#191919;
-      margin-bottom:12px;
+      margin-bottom:14px;
+      line-height:1.4;
     }
 
     .modal-text{
-      font-size:14px;
-      line-height:1.7;
+      font-size:15px;
+      line-height:1.9;
       color:#4b5563;
     }
 
     .modal-text p{
-      margin:0 0 10px;
+      margin:0 0 14px;
     }
 
     .modal-actions{
       display:flex;
       gap:10px;
-      margin-top:18px;
+      margin-top:20px;
     }
 
     .modal-actions .btn{
@@ -364,10 +340,6 @@
       }
       .detail-label{
         min-width:auto;
-      }
-      .benefit-row{
-        flex-direction:column;
-        align-items:flex-start;
       }
     }
   </style>
@@ -416,12 +388,14 @@
 
 <div id="benefitModal" class="modal-overlay" onclick="handleBenefitOverlayClick(event)">
   <div class="modal-card">
-    <div class="modal-title">เงื่อนไขการใช้สิทธิ์ตรวจสายตา</div>
+    <div class="modal-title">รายละเอียดการใช้สิทธิ์ตรวจสายตา</div>
 
     <div class="modal-text">
-      <p>ก่อนเข้ารับบริการ กรุณาติดต่อ admin เพื่อนัดหมายวันและเวลาล่วงหน้าก่อนทุกครั้ง</p>
-      <p>เมื่อกดยืนยันใช้สิทธิ์แล้ว สถานะจะเปลี่ยนเป็น “ใช้สิทธิ์เรียบร้อย” และปุ่มกดใช้สิทธิ์จะไม่แสดงอีก</p>
-      <p>หากมีรายการซื้อใหม่ที่ได้รับสิทธิ์ตรวจสายตาเพิ่ม ระบบจะแสดงสิทธิ์ใหม่อีกครั้งตามข้อมูลใน Google Sheet</p>
+      <p>การตรวจวัดสายตาและสุขภาพตาเบื้องต้น รบกวนลูกค้าทำการนัดหมายโดยระบุวันที่และเวลาที่ต้องการเข้ารับบริการผ่านแอดมิน</p>
+
+      <p>โดยสิทธิ์ดังกล่าวเป็นสิทธิพิเศษที่ให้แก่ลูกค้าที่ตัดเลนส์กับทางร้าน เพื่อเป็นการติดตามปัญหาสายตาว่ามีการเปลี่ยนแปลงไปอย่างไร</p>
+
+      <p>สิทธิ์ดังกล่าวสามารถส่งต่อได้โดยแจ้งรายละเอียดของผู้เข้ารับบริการแทน</p>
     </div>
 
     <div class="modal-actions">
@@ -436,6 +410,7 @@ const LIFF_ID = '2009688951-wJWIj6F0';
 const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbxqOq3DHuVVaqPp5ppmMs66JtkVVsPGZFHT7-TGCu1VgQnPmJRVLZzDgL9in2nTNu0/exec';
 
 let currentLineUserId = '';
+let currentBenefitRowNo = 0;
 
 function setLoading(text){
   document.getElementById('loading').classList.remove('hidden');
@@ -546,39 +521,18 @@ function renderData(result){
   const customer = result.customer || {};
   const history = Array.isArray(result.history) ? result.history : [];
   const totalPoints = result.points ?? 0;
-  const benefitStatus = result.benefitStatus || 'ใช้สิทธิ์เรียบร้อย';
-  const canUseBenefit = !!result.canUseBenefit;
 
   document.getElementById('memberInfo').innerHTML = `
     <div class="member-name">${escapeHtml(customer.name || '-')}</div>
-
     <div class="grid grid-2">
       <div class="mini-box">
         <div class="mini-label">จำนวนรายการซื้อ</div>
         <div class="mini-value">${numberFormat(history.length)}</div>
       </div>
-
       <div class="mini-box">
         <div class="mini-label">คะแนนสะสม</div>
         <div class="mini-value">${numberFormat(totalPoints)}</div>
       </div>
-    </div>
-
-    <div class="benefit-box">
-      <div class="benefit-row">
-        <div class="benefit-title">สิทธิ์ตรวจสายตา</div>
-        <div class="${benefitStatus === 'ใช้สิทธิ์เรียบร้อย' ? 'status-badge status-used' : 'status-badge status-unused'}">
-          ${escapeHtml(benefitStatus)}
-        </div>
-      </div>
-
-      <div class="benefit-note">
-        เมื่อต้องการใช้สิทธิ์ กรุณาอ่านเงื่อนไขและกดยืนยันใช้สิทธิ์ก่อน จากนั้นจึงติดต่อ admin เพื่อนัดหมายวันและเวลา
-      </div>
-
-      ${canUseBenefit ? `
-        <button class="benefit-btn" onclick="openBenefitModal()">กดใช้สิทธิ์</button>
-      ` : ``}
     </div>
   `;
 
@@ -624,6 +578,10 @@ function renderData(result){
             </div>
           </div>
 
+          ${item.canUseBenefit ? `
+            <button class="benefit-btn" onclick="openBenefitModal(${Number(item.rowNo)})">ใช้สิทธิ์ตรวจวัดสายตา</button>
+          ` : ``}
+
         </div>
       </div>
     `;
@@ -632,12 +590,14 @@ function renderData(result){
   document.getElementById('historyInfo').innerHTML = html;
 }
 
-function openBenefitModal(){
+function openBenefitModal(rowNo){
+  currentBenefitRowNo = Number(rowNo || 0);
   document.getElementById('benefitModal').classList.add('show');
 }
 
 function closeBenefitModal(){
   document.getElementById('benefitModal').classList.remove('show');
+  currentBenefitRowNo = 0;
 }
 
 function handleBenefitOverlayClick(event){
@@ -654,7 +614,8 @@ async function confirmUseBenefit(){
   try{
     const result = await apiGet({
       action:'useBenefit',
-      lineUserId: currentLineUserId
+      lineUserId: currentLineUserId,
+      rowNo: currentBenefitRowNo
     });
 
     if(result.success){
