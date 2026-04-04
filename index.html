@@ -256,13 +256,15 @@
       resultBox.textContent = result.message || '';
 
 if (result.debug) {
-  resultBox.textContent += '\n' + JSON.stringify(result.debug, null, 2);
+  console.log(result.debug);
 }
 
-      if (result.success) {
-        await loadMemberData();
-      }
-    }
+     if (result.success) {
+  document.getElementById('linkSection').classList.add('hidden');
+  document.getElementById('loading').classList.remove('hidden');
+  setLoading('กำลังโหลดข้อมูลสมาชิก...');
+  await loadMemberData();
+}
 
     async function initApp() {
       try {
