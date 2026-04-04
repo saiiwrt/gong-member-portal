@@ -7,80 +7,286 @@
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f6f7f9;
-      color: #222;
-      margin: 0;
-      padding: 16px;
+    :root{
+      --bg:#f4f5f7;
+      --card:#ffffff;
+      --text:#1f2937;
+      --muted:#6b7280;
+      --line:#e5e7eb;
+      --green:#06c755;
+      --green-soft:#e9f9ef;
+      --green-dark:#0f8f43;
+      --shadow:0 4px 18px rgba(0,0,0,.06);
+      --radius:18px;
     }
 
-    .card {
-      background: #fff;
-      border-radius: 16px;
-      padding: 16px;
-      margin-bottom: 16px;
-      box-shadow: 0 2px 10px rgba(0,0,0,.06);
+    *{ box-sizing:border-box; }
+
+    body{
+      margin:0;
+      background:var(--bg);
+      font-family:Arial, sans-serif;
+      color:var(--text);
+      padding:16px;
     }
 
-    input, button {
-      width: 100%;
-      padding: 12px;
-      border-radius: 10px;
-      border: 1px solid #ccc;
-      margin-top: 8px;
-      margin-bottom: 12px;
-      font-size: 16px;
+    .container{
+      max-width:760px;
+      margin:0 auto;
     }
 
-    button {
-      background: #06c755;
-      color: #fff;
-      border: none;
-      font-weight: bold;
+    .card{
+      background:var(--card);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      overflow:hidden;
+      margin-bottom:18px;
     }
 
-    .hidden { display: none; }
-    .small { font-size: 14px; color: #666; }
-    .error { color: red; }
+    .section-head{
+      background:var(--green-soft);
+      color:var(--green-dark);
+      padding:14px 18px;
+      font-weight:700;
+      font-size:20px;
+      border-bottom:1px solid #d7f3e1;
+    }
 
+    .section-body{
+      padding:18px;
+    }
+
+    .hero{
+      background:linear-gradient(135deg,#06c755,#0aa84c);
+      color:#fff;
+      padding:22px 20px;
+      border-radius:22px;
+      box-shadow:var(--shadow);
+      margin-bottom:18px;
+    }
+
+    .hero-title{
+      font-size:24px;
+      font-weight:700;
+      margin:0 0 6px;
+    }
+
+    .hero-sub{
+      opacity:.92;
+      font-size:14px;
+      margin:0;
+    }
+
+    .member-name{
+      font-size:28px;
+      font-weight:700;
+      margin:0 0 8px;
+      line-height:1.25;
+    }
+
+    .muted{
+      color:var(--muted);
+      font-size:14px;
+    }
+
+    .grid{
+      display:grid;
+      gap:12px;
+    }
+
+    .grid-2{
+      grid-template-columns:1fr 1fr;
+    }
+
+    .mini-box{
+      background:#f9fafb;
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:14px;
+    }
+
+    .mini-label{
+      font-size:13px;
+      color:var(--muted);
+      margin-bottom:6px;
+    }
+
+    .mini-value{
+      font-size:20px;
+      font-weight:700;
+      line-height:1.2;
+    }
+
+    input, button{
+      width:100%;
+      padding:14px 16px;
+      border-radius:14px;
+      border:1px solid #d1d5db;
+      font-size:18px;
+      margin-top:8px;
+      margin-bottom:14px;
+    }
+
+    button{
+      background:var(--green);
+      color:#fff;
+      border:none;
+      font-weight:700;
+      cursor:pointer;
+    }
+
+    .hidden{ display:none; }
+
+    .loading-card{
+      background:var(--card);
+      border-radius:22px;
+      box-shadow:var(--shadow);
+      padding:22px;
+      margin-bottom:18px;
+    }
+
+    .loading-title{
+      font-size:22px;
+      font-weight:700;
+      margin:0 0 10px;
+    }
+
+    .loading-text{
+      color:var(--muted);
+      font-size:16px;
+      margin:0;
+    }
+
+    .purchase-group{
+      border:1px solid var(--line);
+      border-radius:16px;
+      overflow:hidden;
+      margin-bottom:16px;
+      background:#fff;
+    }
+
+    .purchase-date{
+      background:#f9fafb;
+      border-bottom:1px solid var(--line);
+      padding:12px 16px;
+      font-weight:700;
+      font-size:18px;
+    }
+
+    .purchase-body{
+      padding:14px 16px;
+    }
+
+    .detail-row{
+      display:flex;
+      gap:10px;
+      margin-bottom:10px;
+      align-items:flex-start;
+    }
+
+    .detail-label{
+      min-width:110px;
+      color:var(--muted);
+      font-size:15px;
+      font-weight:700;
+    }
+
+    .detail-value{
+      flex:1;
+      font-size:16px;
+      line-height:1.5;
+      word-break:break-word;
+    }
+
+    .badge{
+      display:inline-block;
+      padding:6px 12px;
+      border-radius:999px;
+      background:var(--green-soft);
+      color:var(--green-dark);
+      font-size:13px;
+      font-weight:700;
+    }
+
+    .empty{
+      color:var(--muted);
+      font-size:15px;
+    }
+
+    .error{
+      color:#c62828;
+      white-space:pre-wrap;
+      font-size:14px;
+    }
+
+    @media (max-width:640px){
+      .grid-2{
+        grid-template-columns:1fr;
+      }
+      .member-name{
+        font-size:24px;
+      }
+      .detail-row{
+        flex-direction:column;
+        gap:4px;
+      }
+      .detail-label{
+        min-width:auto;
+      }
+    }
   </style>
 </head>
-
 <body>
+<div class="container">
 
-  <div id="loading" class="card">
-    <h2>กำลังโหลดข้อมูล...</h2>
-    <p id="loadingText">เริ่มต้นระบบ</p>
+  <div id="loading" class="loading-card">
+    <h2 class="loading-title">กำลังโหลดข้อมูล...</h2>
+    <p class="loading-text" id="loadingText">เริ่มต้นระบบ</p>
   </div>
 
   <div id="linkSection" class="card hidden">
-    <h2>เชื่อมบัญชีก่อนใช้งาน</h2>
-    <input type="text" id="phone" placeholder="เบอร์โทร">
-    <input type="date" id="birthDate">
-    <button id="linkBtn">เชื่อมบัญชี</button>
-    <div id="linkResult" class="small"></div>
+    <div class="section-head">เชื่อมบัญชีก่อนใช้งาน</div>
+    <div class="section-body">
+      <p class="muted">กรอกเบอร์โทรและวันเดือนปีเกิดที่เคยใช้กับร้าน</p>
+      <input type="text" id="phone" placeholder="เบอร์โทร">
+      <input type="date" id="birthDate">
+      <button id="linkBtn">เชื่อมบัญชี</button>
+      <div id="linkResult" class="muted"></div>
+    </div>
   </div>
 
   <div id="memberSection" class="hidden">
-    <div class="card">
-      <h2>ข้อมูลสมาชิก</h2>
-      <div id="memberInfo"></div>
+
+    <div class="hero">
+      <h1 class="hero-title">GONU Member Portal</h1>
+      <p class="hero-sub">ข้อมูลสมาชิกและประวัติการซื้อ</p>
     </div>
 
     <div class="card">
-      <h2>รายการล่าสุด</h2>
-      <div id="latestInfo"></div>
+      <div class="section-head">ข้อมูลสมาชิก</div>
+      <div class="section-body">
+        <div id="memberInfo"></div>
+      </div>
     </div>
 
     <div class="card">
-      <h2>ประวัติการซื้อ</h2>
-      <div id="historyInfo"></div>
+      <div class="section-head">สรุปสมาชิก</div>
+      <div class="section-body">
+        <div class="grid grid-2" id="summaryInfo"></div>
+      </div>
     </div>
+
+    <div class="card">
+      <div class="section-head">ประวัติการซื้อ</div>
+      <div class="section-body">
+        <div id="historyInfo"></div>
+      </div>
+    </div>
+
   </div>
+</div>
 
 <script>
-
 const LIFF_ID = '2009688951-wJWIj6F0';
 const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbxqOq3DHuVVaqPp5ppmMs66JtkVVsPGZFHT7-TGCu1VgQnPmJRVLZzDgL9in2nTNu0/exec';
 
@@ -91,67 +297,180 @@ function setLoading(text){
   document.getElementById('loadingText').textContent = text;
 }
 
+function hideLoading(){
+  document.getElementById('loading').classList.add('hidden');
+}
+
 function showError(text){
   document.getElementById('loading').classList.remove('hidden');
-  document.getElementById('loading').innerHTML = `<h2>เกิดข้อผิดพลาด</h2><p class="error">${text}</p>`;
+  document.getElementById('loading').innerHTML = `
+    <h2 class="loading-title">เกิดข้อผิดพลาด</h2>
+    <p class="error">${escapeHtml(text)}</p>
+  `;
+  document.getElementById('linkSection').classList.add('hidden');
+  document.getElementById('memberSection').classList.add('hidden');
+}
+
+function escapeHtml(str){
+  return String(str ?? '')
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#039;');
+}
+
+function formatDate(value){
+  if(!value) return '-';
+
+  const str = String(value).trim();
+
+  const slashMatch = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (slashMatch) {
+    const d = parseInt(slashMatch[1],10);
+    const m = parseInt(slashMatch[2],10);
+    const y = parseInt(slashMatch[3],10);
+    return `${d}/${m}/${y}`;
+  }
+
+  const isoMatch = str.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (isoMatch) {
+    let y = parseInt(isoMatch[1],10);
+    let m = parseInt(isoMatch[2],10);
+    let d = parseInt(isoMatch[3],10);
+    if (y < 2400) y += 543;
+    return `${d}/${m}/${y}`;
+  }
+
+  const d = new Date(value);
+  if(!isNaN(d)){
+    let year = d.getFullYear();
+    if(year < 2400) year += 543;
+    return `${d.getDate()}/${d.getMonth()+1}/${year}`;
+  }
+
+  return str;
+}
+
+function numberFormat(value){
+  const n = Number(value || 0);
+  if (isNaN(n)) return '-';
+  return n.toLocaleString('th-TH');
 }
 
 async function apiGet(params){
   const url = new URL(API_BASE_URL);
   Object.keys(params).forEach(k => url.searchParams.set(k, params[k]));
-  const res = await fetch(url);
+  const res = await fetch(url.toString());
   return await res.json();
 }
 
-function formatDate(value){
-  if(!value) return '-';
-  const d = new Date(value);
-  let year = d.getFullYear();
-  if(year < 2400) year += 543;
-  return `${d.getDate()}/${d.getMonth()+1}/${year}`;
-}
-
 async function loadMemberData(){
-  setLoading('กำลังโหลดข้อมูลสมาชิก...');
+  setLoading('กำลังตรวจสอบข้อมูลสมาชิก...');
+
   const result = await apiGet({
     action:'member',
     lineUserId: currentLineUserId
   });
 
+  renderData(result);
+}
+
+function renderData(result){
   if(!result.success){
-    if((result.message||'').includes('ยังไม่พบ')){
-      document.getElementById('loading').classList.add('hidden');
+    hideLoading();
+
+    if((result.message || '').includes('ยังไม่พบการผูกบัญชี')){
       document.getElementById('linkSection').classList.remove('hidden');
+      document.getElementById('memberSection').classList.add('hidden');
       return;
     }
-    showError(result.message);
+
+    showError(result.message || 'ไม่สามารถโหลดข้อมูลได้');
     return;
   }
 
-  document.getElementById('loading').classList.add('hidden');
+  hideLoading();
+  document.getElementById('linkSection').classList.add('hidden');
   document.getElementById('memberSection').classList.remove('hidden');
 
+  const customer = result.customer || {};
+  const history = Array.isArray(result.history) ? result.history : [];
+  const totalPoints = result.points ?? 0;
+
   document.getElementById('memberInfo').innerHTML = `
-    <p>${result.customer.name}</p>
-    <p>${result.customer.phone}</p>
+    <div class="member-name">${escapeHtml(customer.name || '-')}</div>
+    <div class="grid grid-2">
+      <div class="mini-box">
+        <div class="mini-label">เบอร์โทร</div>
+        <div class="mini-value">${escapeHtml(customer.phone || '-')}</div>
+      </div>
+      <div class="mini-box">
+        <div class="mini-label">รหัสสมาชิก</div>
+        <div class="mini-value">${escapeHtml(customer.customerId || '-')}</div>
+      </div>
+    </div>
   `;
 
-  document.getElementById('latestInfo').innerHTML = `
-    <p>${formatDate(result.latest.date)}</p>
-    <p>${result.latest.glasses}</p>
-    <p>${result.latest.lens}</p>
+  document.getElementById('summaryInfo').innerHTML = `
+    <div class="mini-box">
+      <div class="mini-label">จำนวนรายการซื้อ</div>
+      <div class="mini-value">${numberFormat(history.length)}</div>
+    </div>
+    <div class="mini-box">
+      <div class="mini-label">แต้มสะสม</div>
+      <div class="mini-value">${numberFormat(totalPoints)}</div>
+    </div>
   `;
 
-  let html='';
-  (result.history||[]).forEach(x=>{
-    html+=`<div>${formatDate(x.date)} - ${x.glasses}</div>`;
+  if(history.length === 0){
+    document.getElementById('historyInfo').innerHTML = `<div class="empty">ยังไม่มีประวัติการซื้อ</div>`;
+    return;
+  }
+
+  let html = '';
+
+  history.slice().reverse().forEach(item => {
+    html += `
+      <div class="purchase-group">
+        <div class="purchase-date">วันที่ซื้อ: ${formatDate(item.date)}</div>
+        <div class="purchase-body">
+
+          <div class="detail-row">
+            <div class="detail-label">กรอบแว่น</div>
+            <div class="detail-value">${escapeHtml(item.glasses || '-')}</div>
+          </div>
+
+          <div class="detail-row">
+            <div class="detail-label">เลนส์</div>
+            <div class="detail-value">${escapeHtml(item.lens || '-')}</div>
+          </div>
+
+          <div class="detail-row">
+            <div class="detail-label">ค่าสายตา R</div>
+            <div class="detail-value">${escapeHtml(item.rxR || '-')}</div>
+          </div>
+
+          <div class="detail-row">
+            <div class="detail-label">ค่าสายตา L</div>
+            <div class="detail-value">${escapeHtml(item.rxL || '-')}</div>
+          </div>
+
+          <div class="detail-row">
+            <div class="detail-label">สิทธิ์ตรวจฟรี</div>
+            <div class="detail-value"><span class="badge">${escapeHtml(item.recheck || '-')}</span></div>
+          </div>
+
+        </div>
+      </div>
+    `;
   });
 
   document.getElementById('historyInfo').innerHTML = html;
 }
 
 async function linkAccount(){
-  const phone = document.getElementById('phone').value;
+  const phone = document.getElementById('phone').value.trim();
   const birthDate = document.getElementById('birthDate').value;
   const resultBox = document.getElementById('linkResult');
 
@@ -160,7 +479,7 @@ async function linkAccount(){
     return;
   }
 
-  resultBox.textContent='กำลังเชื่อม...';
+  resultBox.textContent = 'กำลังเชื่อมบัญชี...';
 
   const result = await apiGet({
     action:'link',
@@ -170,37 +489,38 @@ async function linkAccount(){
   });
 
   if(result.success){
+    resultBox.textContent = '';
     document.getElementById('linkSection').classList.add('hidden');
     await loadMemberData();
   }else{
-    resultBox.textContent = result.message;
+    resultBox.textContent = result.message || 'เชื่อมบัญชีไม่สำเร็จ';
   }
 }
 
 async function initApp(){
   try{
-    setLoading('กำลังเริ่มต้น...');
-    await liff.init({liffId:LIFF_ID});
+    setLoading('กำลังเริ่มต้นระบบ...');
+    await liff.init({ liffId: LIFF_ID });
 
     if(!liff.isLoggedIn()){
+      setLoading('กำลังพาไปล็อกอิน LINE...');
       liff.login();
       return;
     }
 
+    setLoading('กำลังดึงโปรไฟล์ LINE...');
     const profile = await liff.getProfile();
     currentLineUserId = profile.userId;
 
     await loadMemberData();
 
-  }catch(e){
-    showError(e.message);
+  }catch(err){
+    showError('LIFF error: ' + (err.message || String(err)));
   }
 }
 
 document.getElementById('linkBtn').addEventListener('click', linkAccount);
 initApp();
-
 </script>
-
 </body>
 </html>
