@@ -13,7 +13,7 @@
       --text:#1f2937;
       --muted:#6b7280;
       --line:#e5e7eb;
-      --brand:#343434;
+      --brand:#191919;
       --brand-soft:#ececec;
       --brand-text:#ffffff;
       --soft:#f9fafb;
@@ -141,7 +141,7 @@
     }
 
     button{
-      background:#343434;
+      background:#191919;
       color:#fff;
       border:none;
       font-weight:700;
@@ -405,15 +405,11 @@ function renderData(result){
     <div class="member-name">${escapeHtml(customer.name || '-')}</div>
     <div class="grid grid-2">
       <div class="mini-box">
-        <div class="mini-label">รหัสสมาชิก</div>
-        <div class="mini-value">${escapeHtml(customer.customerId || '-')}</div>
-      </div>
-      <div class="mini-box">
         <div class="mini-label">จำนวนรายการซื้อ</div>
         <div class="mini-value">${numberFormat(history.length)}</div>
       </div>
       <div class="mini-box">
-        <div class="mini-label">แต้มสะสม</div>
+        <div class="mini-label">คะแนนสะสม</div>
         <div class="mini-value">${numberFormat(totalPoints)}</div>
       </div>
     </div>
