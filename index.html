@@ -13,11 +13,10 @@
       --text:#1f2937;
       --muted:#6b7280;
       --line:#e5e7eb;
-      --brand:#191919;
-      --brand-soft:#ececec;
+      --brand:#191919;            /* ใช้เฉพาะ GONU MEMBER */
       --brand-text:#ffffff;
       --soft:#f9fafb;
-      --history-head:#4a4a4a;
+      --history-head:#4a4a4a;     /* ใช้กับหัวข้อ/ปุ่มทั้งหมด */
       --shadow:0 4px 18px rgba(0,0,0,.06);
       --radius:18px;
       --used-bg:#fdecef;
@@ -49,15 +48,7 @@
       margin-bottom:18px;
     }
 
-    .section-head{
-      background:var(--history-head);
-      color:#fff;
-      padding:14px 18px;
-      font-weight:700;
-      font-size:20px;
-      border-bottom:1px solid #5e5e5e;
-    }
-
+    .section-head,
     .history-head{
       background:var(--history-head);
       color:#fff;
@@ -204,15 +195,49 @@
       opacity:.7;
     }
 
-    button{
-      padding:14px 16px;
-      margin-top:6px;
-      margin-bottom:0;
-      background:#191919;
+    /* กล่องสรุปด้านบน */
+    .grid{
+      display:grid;
+      gap:12px;
+    }
+
+    .grid-2{
+      grid-template-columns:1fr 1fr;
+    }
+
+    .mini-box{
+      background:var(--soft);
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:14px;
+    }
+
+    .mini-label{
+      font-size:13px;
+      color:var(--muted);
+      margin-bottom:6px;
+    }
+
+    .mini-value{
+      font-size:20px;
+      font-weight:700;
+      line-height:1.2;
+      color:#222;
+    }
+
+    /* ปุ่มทั้งหมดใช้สีเดียวกับหัวข้อประวัติการซื้อ */
+    button,
+    .btn-primary,
+    .btn-secondary,
+    .benefit-btn{
+      background:var(--history-head);
       color:#fff;
       border:none;
       font-weight:700;
       cursor:pointer;
+      padding:14px 16px;
+      margin-top:6px;
+      margin-bottom:0;
     }
 
     button:disabled{
@@ -307,9 +332,7 @@
 
     .benefit-btn{
       margin-top:8px;
-      margin-bottom:0;
       font-size:15px;
-      padding:12px 14px;
       border-radius:12px;
     }
 
@@ -380,27 +403,20 @@
       font-size:14px;
     }
 
-    .btn-secondary{
-      background:#f3f4f6;
-      color:#374151;
-    }
-
-    .btn-primary{
-      background:#191919;
-      color:#fff;
-    }
-
     @media (max-width:640px){
       .grid-2{
         grid-template-columns:1fr;
       }
+
       .member-name{
         font-size:24px;
       }
+
       .detail-row{
         flex-direction:column;
         gap:4px;
       }
+
       .detail-label{
         min-width:auto;
       }
@@ -421,11 +437,12 @@
       <p class="link-desc">กรุณากรอกรายละเอียดเบอร์โทรศัพท์และวันเดือนปีเกิดที่เคยให้ไว้กับทางร้าน</p>
 
       <div class="field-group">
+        <label for="phone" class="field-label">เบอร์โทรศัพท์</label>
         <input
           type="text"
           id="phone"
           class="form-input"
-          placeholder="เบอร์โทรศัพท์"
+          placeholder="กรอกเบอร์โทรศัพท์"
           inputmode="tel"
           autocomplete="tel"
         >
@@ -478,9 +495,7 @@
 
     <div class="modal-text">
       <p>รบกวนลูกค้าทำการนัดหมายล่วงหน้าระบุวันที่และเวลาที่ต้องการเข้ารับบริการ ผ่านแอดมินทางแชท LINE</p>
-
       <p>โดยสิทธิ์ดังกล่าวเป็นสิทธิพิเศษที่ให้แก่ลูกค้าที่ตัดเลนส์กับทางร้าน เพื่อติดตามการเปลี่ยนแปลงของค่าสายตา</p>
-
       <p>*สามารถส่งต่อสิทธิ์ให้ผู้อื่นได้โดยแจ้งรายละเอียดของผู้ที่จะเข้ารับบริการแทน</p>
     </div>
 
