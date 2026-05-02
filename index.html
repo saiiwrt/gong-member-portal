@@ -16,16 +16,13 @@
       --brand:#191919;
       --brand-text:#ffffff;
       --soft:#f9fafb;
-      --history-head:#4a4a4a;
+      --section-dark:#191919;
       --shadow:0 4px 18px rgba(0,0,0,.06);
       --radius:18px;
       --used-bg:#fdecef;
       --used-text:#c05a74;
       --unused-bg:#eef2f7;
       --unused-text:#4b5563;
-      --tab-bg:#ffffff;
-      --tab-active:#4a4a4a;
-      --tab-active-text:#ffffff;
       --tab-border:#d1d5db;
     }
 
@@ -54,12 +51,12 @@
 
     .section-head,
     .history-head{
-      background:var(--history-head);
+      background:var(--section-dark);
       color:#fff;
       padding:14px 18px;
       font-weight:700;
       font-size:20px;
-      border-bottom:1px solid #5e5e5e;
+      border-bottom:1px solid #2d2d2d;
     }
 
     .section-body{
@@ -233,7 +230,7 @@
     .btn-secondary,
     .benefit-btn,
     .redeem-btn{
-      background:var(--history-head);
+      background:var(--section-dark);
       color:#fff;
       border:none;
       font-weight:700;
@@ -302,13 +299,15 @@
       color:var(--muted);
       font-size:15px;
       font-weight:700;
+      flex-shrink:0;
     }
 
     .detail-value{
       flex:1;
       font-size:16px;
-      line-height:1.5;
+      line-height:1.6;
       word-break:break-word;
+      white-space:normal;
     }
 
     .status-badge{
@@ -373,6 +372,7 @@
       border-radius:18px;
       padding:22px;
       box-shadow:0 18px 40px rgba(0,0,0,.16);
+      position:relative;
     }
 
     .modal-title{
@@ -413,6 +413,27 @@
       border:1px solid #e5e7eb !important;
     }
 
+    .success-close{
+      position:absolute;
+      top:12px;
+      right:12px;
+      width:32px;
+      height:32px;
+      border-radius:999px;
+      border:none;
+      background:#f3f4f6;
+      color:#374151;
+      font-size:18px;
+      font-weight:700;
+      line-height:1;
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:0;
+      margin:0;
+    }
+
     .tab-menu-wrap{
       margin-bottom:18px;
     }
@@ -420,26 +441,34 @@
     .tab-menu{
       display:grid;
       grid-template-columns:1fr 1fr 1fr;
-      gap:10px;
+      gap:0;
+      background:var(--section-dark);
+      border-radius:16px;
+      overflow:hidden;
+      box-shadow:var(--shadow);
     }
 
     .tab-btn{
       width:100%;
-      border:1px solid var(--tab-border);
-      background:var(--tab-bg);
-      color:#374151;
-      font-size:15px;
+      border:none;
+      background:transparent;
+      color:rgba(255,255,255,.78);
+      font-size:20px;
       font-weight:700;
-      padding:12px 10px;
-      border-radius:14px;
+      padding:16px 10px;
       cursor:pointer;
       margin:0;
+      border-radius:0;
+      white-space:nowrap;
+    }
+
+    .tab-btn + .tab-btn{
+      border-left:1px solid rgba(255,255,255,.12);
     }
 
     .tab-btn.active{
-      background:var(--tab-active);
-      color:var(--tab-active-text);
-      border-color:var(--tab-active);
+      background:rgba(255,255,255,.08);
+      color:#fff;
     }
 
     .tab-panel{
@@ -468,8 +497,9 @@
         min-width:auto;
       }
 
-      .tab-menu{
-        grid-template-columns:1fr;
+      .tab-btn{
+        font-size:16px;
+        padding:14px 8px;
       }
     }
 
@@ -606,6 +636,16 @@
   </div>
 </div>
 
+<div id="redeemSuccessModal" class="modal-overlay" onclick="handleRedeemSuccessOverlayClick(event)">
+  <div class="modal-card">
+    <button class="success-close" onclick="closeRedeemSuccessModal()">×</button>
+    <div class="modal-title">แลกคะแนนสำเร็จ</div>
+    <div class="modal-text">
+      <p id="redeemSuccessRefText">เลขอ้างอิง : -</p>
+    </div>
+  </div>
+</div>
+
 <script>
 const LIFF_ID = '2009688951-wJWIj6F0';
 const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbxqOq3DHuVVaqPp5ppmMs66JtkVVsPGZFHT7-TGCu1VgQnPmJRVLZzDgL9in2nTNu0/exec';
@@ -738,6 +778,19 @@ async function apiGet(params){
   return await res.json();
 }
 
+async function getPointBalance(){
+  const result = await apiGet({
+    action:'memberProfile',
+    lineUserId: currentLineUserId
+  });
+
+  if(result && result.success){
+    return Number(result.pointBalance || 0);
+  }
+
+  return 0;
+}
+
 async function loadRewards(){
   const result = await apiGet({ action:'rewards' });
 
@@ -765,14 +818,19 @@ async function loadRedemptionHistory(){
 
 async function loadMemberData(){
   setLoading('กำลังตรวจสอบข้อมูลสมาชิก...');
-  const result = await apiGet({
-    action:'member',
-    lineUserId: currentLineUserId
-  });
-  renderData(result);
+
+  const [memberResult, pointBalance] = await Promise.all([
+    apiGet({
+      action:'member',
+      lineUserId: currentLineUserId
+    }),
+    getPointBalance()
+  ]);
+
+  renderData(memberResult, pointBalance);
 }
 
-function renderData(result){
+function renderData(result, pointBalance){
   if(!result.success){
     hideLoading();
 
@@ -794,7 +852,6 @@ function renderData(result){
 
   const customer = result.customer || {};
   const history = Array.isArray(result.history) ? result.history : [];
-  const totalPoints = result.points ?? 0;
 
   document.getElementById('memberInfo').innerHTML = `
     <div class="member-name">${escapeHtml(customer.name || '-')}</div>
@@ -804,8 +861,8 @@ function renderData(result){
         <div class="mini-value">${numberFormat(history.length)}</div>
       </div>
       <div class="mini-box">
-        <div class="mini-label">คะแนนสะสม</div>
-        <div class="mini-value">${numberFormat(totalPoints)}</div>
+        <div class="mini-label">คะแนนคงเหลือ</div>
+        <div class="mini-value">${numberFormat(pointBalance)}</div>
       </div>
     </div>
   `;
@@ -1001,6 +1058,22 @@ function handleRedeemOverlayClick(event){
   }
 }
 
+function openRedeemSuccessModal(refCode){
+  document.getElementById('redeemSuccessRefText').textContent = 'เลขอ้างอิง : ' + (refCode || '-');
+  document.getElementById('redeemSuccessModal').classList.add('show');
+}
+
+function closeRedeemSuccessModal(){
+  document.getElementById('redeemSuccessModal').classList.remove('show');
+  switchTab('redemption');
+}
+
+function handleRedeemSuccessOverlayClick(event){
+  if(event.target.id === 'redeemSuccessModal'){
+    closeRedeemSuccessModal();
+  }
+}
+
 async function confirmRedeemReward(){
   const btn = document.getElementById('confirmRedeemBtn');
   btn.disabled = true;
@@ -1015,13 +1088,9 @@ async function confirmRedeemReward(){
 
     if(result.success){
       closeRedeemModal();
-      alert(
-        'แลกคะแนนสำเร็จ\n' +
-        'เลขอ้างอิง: ' + (result.refCode || '-') + '\n' +
-        'คะแนนคงเหลือ: ' + numberFormat(result.balanceAfter)
-      );
       await loadMemberData();
       await loadRedemptionHistory();
+      openRedeemSuccessModal(result.refCode || '-');
     }else{
       alert(result.message || 'ไม่สามารถแลกคะแนนได้');
     }
