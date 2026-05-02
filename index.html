@@ -54,16 +54,6 @@
       margin-bottom:18px;
     }
 
-    .section-head,
-    .history-head{
-      background:var(--section-dark);
-      color:#fff;
-      padding:14px 18px;
-      font-weight:700;
-      font-size:20px;
-      border-bottom:1px solid #2d2d2d;
-    }
-
     .section-body{
       padding:18px;
     }
@@ -206,8 +196,8 @@
       gap:12px;
     }
 
-    .grid-2{
-      grid-template-columns:1fr 1fr;
+    .grid-1{
+      grid-template-columns:1fr;
     }
 
     .mini-box{
@@ -232,7 +222,6 @@
 
     button,
     .btn-primary,
-    .btn-secondary,
     .benefit-btn,
     .redeem-btn{
       background:var(--action-btn);
@@ -243,6 +232,13 @@
       padding:14px 16px;
       margin-top:6px;
       margin-bottom:0;
+    }
+
+    .btn-secondary{
+      background:#dbdbdb !important;
+      color:#000000 !important;
+      border:none !important;
+      font-weight:700;
     }
 
     button:disabled{
@@ -418,12 +414,6 @@
       min-width:120px;
     }
 
-    .btn-secondary{
-      background:#4b4b4b !important;
-      color:#ffffff !important;
-      border:none !important;
-    }
-
     .success-close{
       position:absolute;
       top:12px;
@@ -465,7 +455,7 @@
       background:#dbdbdb;
       color:#000000;
       font-size:20px;
-      font-weight:400;
+      font-weight:700;
       padding:16px 10px;
       cursor:pointer;
       margin:0;
@@ -492,10 +482,6 @@
     }
 
     @media (max-width:640px){
-      .grid-2{
-        grid-template-columns:1fr;
-      }
-
       .member-name{
         font-size:24px;
       }
@@ -514,13 +500,6 @@
         padding:14px 8px;
       }
     }
-
-    #linkSection .section-head{
-      text-align:center;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-    }
   </style>
 </head>
 <body>
@@ -532,7 +511,6 @@
   </div>
 
   <div id="linkSection" class="card hidden">
-    <div class="section-head">เข้าสู่ระบบสมาชิก</div>
     <div class="section-body">
       <p class="link-desc">กรุณากรอกรายละเอียดเบอร์โทรศัพท์และวันเดือนปีเกิดที่เคยให้ไว้กับทางร้าน</p>
 
@@ -575,29 +553,20 @@
     </div>
 
     <div id="tabPurchase" class="tab-panel active">
-      <div class="card">
-        <div class="history-head">ประวัติการซื้อ</div>
-        <div class="section-body">
-          <div id="historyInfo"></div>
-        </div>
+      <div class="section-body">
+        <div id="historyInfo"></div>
       </div>
     </div>
 
     <div id="tabRedemption" class="tab-panel">
-      <div class="card">
-        <div class="history-head">ประวัติการใช้คะแนน</div>
-        <div class="section-body">
-          <div id="redemptionInfo"></div>
-        </div>
+      <div class="section-body">
+        <div id="redemptionInfo"></div>
       </div>
     </div>
 
     <div id="tabReward" class="tab-panel">
-      <div class="card">
-        <div class="history-head">แลกคะแนน</div>
-        <div class="section-body">
-          <div id="rewardInfo"></div>
-        </div>
+      <div class="section-body">
+        <div id="rewardInfo"></div>
       </div>
     </div>
   </div>
@@ -860,11 +829,7 @@ function renderData(result, pointBalance){
 
   document.getElementById('memberInfo').innerHTML = `
     <div class="member-name">${escapeHtml(customer.name || '-')}</div>
-    <div class="grid grid-2">
-      <div class="mini-box">
-        <div class="mini-label">จำนวนรายการซื้อ</div>
-        <div class="mini-value">${numberFormat(history.length)}</div>
-      </div>
+    <div class="grid grid-1">
       <div class="mini-box">
         <div class="mini-label">คะแนนคงเหลือ</div>
         <div class="mini-value">${numberFormat(pointBalance)}</div>
