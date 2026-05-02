@@ -13,10 +13,10 @@
       --text:#1f2937;
       --muted:#6b7280;
       --line:#e5e7eb;
-      --brand:#191919;            /* ใช้เฉพาะ GONU MEMBER */
+      --brand:#191919;
       --brand-text:#ffffff;
       --soft:#f9fafb;
-      --history-head:#4a4a4a;     /* ใช้กับหัวข้อ/ปุ่มทั้งหมด */
+      --history-head:#4a4a4a;
       --shadow:0 4px 18px rgba(0,0,0,.06);
       --radius:18px;
       --used-bg:#fdecef;
@@ -195,7 +195,6 @@
       opacity:.7;
     }
 
-    /* กล่องสรุปด้านบน */
     .grid{
       display:grid;
       gap:12px;
@@ -225,7 +224,6 @@
       color:#222;
     }
 
-    /* ปุ่มทั้งหมดใช้สีเดียวกับหัวข้อประวัติการซื้อ */
     button,
     .btn-primary,
     .btn-secondary,
@@ -427,13 +425,13 @@
         min-width:auto;
       }
     }
+
     #linkSection .section-head{
       text-align:center;
       display:flex;
       align-items:center;
       justify-content:center;
     }
-    
   </style>
 </head>
 <body>
@@ -495,6 +493,20 @@
       <div class="history-head">ประวัติการซื้อ</div>
       <div class="section-body">
         <div id="historyInfo"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="history-head">แลกคะแนน</div>
+      <div class="section-body">
+        <div id="rewardInfo"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="history-head">ประวัติการใช้คะแนน</div>
+      <div class="section-body">
+        <div id="redemptionInfo"></div>
       </div>
     </div>
 
@@ -597,6 +609,20 @@ function getRecheckBadgeClass(status){
     : 'status-badge status-unused';
 }
 
+function getRedeemStatusBadgeClass(status){
+  const s = String(status || '').trim().toUpperCase();
+  if(s === 'USED') return 'status-badge status-used';
+  return 'status-badge status-unused';
+}
+
+function getRedeemStatusText(status){
+  const s = String(status || '').trim().toUpperCase();
+  if(s === 'USED') return 'ใช้แล้ว';
+  if(s === 'CANCELLED') return 'ยกเลิกแล้ว';
+  if(s === 'PENDING') return 'รอใช้งาน';
+  return status || '-';
+}
+
 function focusBirthDate(){
   const el = document.getElementById('birthDate');
   if(!el) return;
@@ -617,6 +643,31 @@ async function apiGet(params){
   Object.keys(params).forEach(k => url.searchParams.set(k, params[k]));
   const res = await fetch(url.toString());
   return await res.json();
+}
+
+async function loadRewards(){
+  const result = await apiGet({ action:'rewards' });
+
+  if(!result.success){
+    document.getElementById('rewardInfo').innerHTML = `<div class="empty">ไม่สามารถโหลดรายการแลกคะแนนได้</div>`;
+    return;
+  }
+
+  renderRewards(result.rewards || []);
+}
+
+async function loadRedemptionHistory(){
+  const result = await apiGet({
+    action:'redemptionHistory',
+    lineUserId: currentLineUserId
+  });
+
+  if(!result.success){
+    document.getElementById('redemptionInfo').innerHTML = `<div class="empty">ยังไม่มีประวัติการใช้คะแนน</div>`;
+    return;
+  }
+
+  renderRedemptionHistory(result.history || []);
 }
 
 async function loadMemberData(){
@@ -666,6 +717,8 @@ function renderData(result){
 
   if(history.length === 0){
     document.getElementById('historyInfo').innerHTML = `<div class="empty">ยังไม่มีประวัติการซื้อ</div>`;
+    loadRewards();
+    loadRedemptionHistory();
     return;
   }
 
@@ -716,6 +769,116 @@ function renderData(result){
   });
 
   document.getElementById('historyInfo').innerHTML = html;
+
+  loadRewards();
+  loadRedemptionHistory();
+}
+
+function renderRewards(rewards){
+  const box = document.getElementById('rewardInfo');
+
+  if(!rewards.length){
+    box.innerHTML = `<div class="empty">ยังไม่มีรายการแลกคะแนน</div>`;
+    return;
+  }
+
+  box.innerHTML = rewards.map(r => `
+    <div class="purchase-group">
+      <div class="purchase-date">${escapeHtml(r.RewardName || '-')}</div>
+      <div class="purchase-body">
+
+        <div class="detail-row">
+          <div class="detail-label">ประเภท</div>
+          <div class="detail-value">${escapeHtml(r.RewardType || '-')}</div>
+        </div>
+
+        <div class="detail-row">
+          <div class="detail-label">ใช้คะแนน</div>
+          <div class="detail-value">${numberFormat(r.PointsRequired)} คะแนน</div>
+        </div>
+
+        <div class="detail-row">
+          <div class="detail-label">รายละเอียด</div>
+          <div class="detail-value">${escapeHtml(r.Description || '-')}</div>
+        </div>
+
+        <button class="benefit-btn" onclick="redeemReward('${String(r.RewardID || '').replace(/'/g, "\\'")}')">
+          แลกคะแนน
+        </button>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function redeemReward(rewardId){
+  const ok = confirm('ยืนยันการแลกคะแนน?');
+  if(!ok) return;
+
+  try{
+    const result = await apiGet({
+      action:'redeemReward',
+      lineUserId: currentLineUserId,
+      rewardId: rewardId
+    });
+
+    if(result.success){
+      alert(
+        'แลกคะแนนสำเร็จ\n' +
+        'รายการ: ' + (result.rewardName || '-') + '\n' +
+        'ใช้คะแนน: ' + numberFormat(result.pointsUsed) + '\n' +
+        'เลขอ้างอิง: ' + (result.refCode || '-') + '\n' +
+        'คะแนนคงเหลือ: ' + numberFormat(result.balanceAfter)
+      );
+
+      await loadMemberData();
+    }else{
+      alert(result.message || 'ไม่สามารถแลกคะแนนได้');
+    }
+  }catch(err){
+    alert(err.message || 'เกิดข้อผิดพลาด');
+  }
+}
+
+function renderRedemptionHistory(history){
+  const box = document.getElementById('redemptionInfo');
+
+  if(!history.length){
+    box.innerHTML = `<div class="empty">ยังไม่มีประวัติการใช้คะแนน</div>`;
+    return;
+  }
+
+  box.innerHTML = history.map(item => `
+    <div class="purchase-group">
+      <div class="purchase-date">${escapeHtml(item.RewardNameSnapshot || '-')}</div>
+      <div class="purchase-body">
+
+        <div class="detail-row">
+          <div class="detail-label">คะแนนที่ใช้</div>
+          <div class="detail-value">${numberFormat(item.PointsUsed)} คะแนน</div>
+        </div>
+
+        <div class="detail-row">
+          <div class="detail-label">เลขอ้างอิง</div>
+          <div class="detail-value">${escapeHtml(item.RefCode || '-')}</div>
+        </div>
+
+        <div class="detail-row">
+          <div class="detail-label">สถานะ</div>
+          <div class="detail-value">
+            <span class="${getRedeemStatusBadgeClass(item.RedeemStatus)}">
+              ${escapeHtml(getRedeemStatusText(item.RedeemStatus))}
+            </span>
+          </div>
+        </div>
+
+        <div class="detail-row">
+          <div class="detail-label">วันที่ทำรายการ</div>
+          <div class="detail-value">${formatDate(item.RequestedAt || '')}</div>
+        </div>
+
+      </div>
+    </div>
+  `).join('');
 }
 
 function openBenefitModal(rowNo){
