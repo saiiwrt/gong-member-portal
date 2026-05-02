@@ -29,6 +29,7 @@
       --tab-idle-text:#000000;
       --tab-active:#262626;
       --tab-active-text:#ffffff;
+      --panel-bg:#ffffff;
     }
 
     *{ box-sizing:border-box; }
@@ -268,12 +269,24 @@
       margin:0;
     }
 
+    .tab-panel-wrap{
+      background:var(--panel-bg);
+      border-radius:22px;
+      box-shadow:var(--shadow);
+      padding:18px;
+      margin-bottom:18px;
+    }
+
     .purchase-group{
       border:1px solid var(--line);
       border-radius:16px;
       overflow:hidden;
       margin-bottom:16px;
       background:#fff;
+    }
+
+    .purchase-group:last-child{
+      margin-bottom:0;
     }
 
     .purchase-date{
@@ -552,20 +565,16 @@
       </div>
     </div>
 
-    <div id="tabPurchase" class="tab-panel active">
-      <div class="section-body">
+    <div class="tab-panel-wrap">
+      <div id="tabPurchase" class="tab-panel active">
         <div id="historyInfo"></div>
       </div>
-    </div>
 
-    <div id="tabRedemption" class="tab-panel">
-      <div class="section-body">
+      <div id="tabRedemption" class="tab-panel">
         <div id="redemptionInfo"></div>
       </div>
-    </div>
 
-    <div id="tabReward" class="tab-panel">
-      <div class="section-body">
+      <div id="tabReward" class="tab-panel">
         <div id="rewardInfo"></div>
       </div>
     </div>
