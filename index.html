@@ -17,13 +17,18 @@
       --brand-text:#ffffff;
       --soft:#f9fafb;
       --section-dark:#191919;
+      --action-btn:#4b4b4b;
+      --action-btn-text:#ffffff;
       --shadow:0 4px 18px rgba(0,0,0,.06);
       --radius:18px;
       --used-bg:#fdecef;
       --used-text:#c05a74;
       --unused-bg:#eef2f7;
       --unused-text:#4b5563;
-      --tab-border:#d1d5db;
+      --tab-idle:#c7c8c9;
+      --tab-idle-text:#111111;
+      --tab-active:#191919;
+      --tab-active-text:#ffffff;
     }
 
     *{ box-sizing:border-box; }
@@ -230,8 +235,8 @@
     .btn-secondary,
     .benefit-btn,
     .redeem-btn{
-      background:var(--section-dark);
-      color:#fff;
+      background:var(--action-btn);
+      color:var(--action-btn-text);
       border:none;
       font-weight:700;
       cursor:pointer;
@@ -306,8 +311,9 @@
       flex:1;
       font-size:16px;
       line-height:1.6;
-      word-break:break-word;
       white-space:normal;
+      word-break:break-word;
+      overflow-wrap:anywhere;
     }
 
     .status-badge{
@@ -391,12 +397,16 @@
 
     .modal-text p{
       margin:0 0 14px;
+      white-space:normal;
+      word-break:break-word;
+      overflow-wrap:anywhere;
     }
 
     .modal-actions{
       display:flex;
       gap:10px;
       margin-top:20px;
+      flex-wrap:wrap;
     }
 
     .modal-actions .btn{
@@ -405,6 +415,7 @@
       border-radius:12px;
       padding:12px 14px;
       font-size:14px;
+      min-width:120px;
     }
 
     .btn-secondary{
@@ -442,17 +453,17 @@
       display:grid;
       grid-template-columns:1fr 1fr 1fr;
       gap:0;
-      background:var(--section-dark);
       border-radius:16px;
       overflow:hidden;
       box-shadow:var(--shadow);
+      background:#c7c8c9;
     }
 
     .tab-btn{
       width:100%;
       border:none;
-      background:transparent;
-      color:rgba(255,255,255,.78);
+      background:#c7c8c9;
+      color:#111111;
       font-size:20px;
       font-weight:700;
       padding:16px 10px;
@@ -463,12 +474,12 @@
     }
 
     .tab-btn + .tab-btn{
-      border-left:1px solid rgba(255,255,255,.12);
+      border-left:1px solid rgba(0,0,0,.12);
     }
 
     .tab-btn.active{
-      background:rgba(255,255,255,.08);
-      color:#fff;
+      background:#191919;
+      color:#ffffff;
     }
 
     .tab-panel{
@@ -526,24 +537,13 @@
 
       <div class="field-group">
         <label for="phone" class="field-label">เบอร์โทรศัพท์</label>
-        <input
-          type="text"
-          id="phone"
-          class="form-input"
-          inputmode="tel"
-          autocomplete="tel"
-        >
+        <input type="text" id="phone" class="form-input" inputmode="tel" autocomplete="tel">
       </div>
 
       <div class="field-group">
         <label for="birthDate" class="field-label">วันเดือนปีเกิด</label>
         <div class="date-wrap" onclick="focusBirthDate()">
-          <input
-            type="date"
-            id="birthDate"
-            class="form-input date-input"
-            autocomplete="bday"
-          >
+          <input type="date" id="birthDate" class="form-input date-input" autocomplete="bday">
         </div>
         <div class="field-hint">กดช่องนี้เพื่อเลือกวันเดือนปีเกิด</div>
       </div>
@@ -554,7 +554,6 @@
   </div>
 
   <div id="memberSection" class="hidden">
-
     <div class="hero">
       <h1 class="hero-title">GONU MEMBER</h1>
       <p class="hero-sub">ข้อมูลสมาชิกและประวัติการซื้อ</p>
@@ -600,20 +599,17 @@
         </div>
       </div>
     </div>
-
   </div>
 </div>
 
 <div id="benefitModal" class="modal-overlay" onclick="handleBenefitOverlayClick(event)">
   <div class="modal-card">
     <div class="modal-title">รายละเอียดการใช้สิทธิ์ตรวจสายตา</div>
-
     <div class="modal-text">
       <p>รบกวนลูกค้าทำการนัดหมายล่วงหน้าระบุวันที่และเวลาที่ต้องการเข้ารับบริการ ผ่านแอดมินทางแชท LINE</p>
       <p>โดยสิทธิ์ดังกล่าวเป็นสิทธิพิเศษที่ให้แก่ลูกค้าที่ตัดเลนส์กับทางร้าน เพื่อติดตามการเปลี่ยนแปลงของค่าสายตา</p>
       <p>*สามารถส่งต่อสิทธิ์ให้ผู้อื่นได้โดยแจ้งรายละเอียดของผู้ที่จะเข้ารับบริการแทน</p>
     </div>
-
     <div class="modal-actions">
       <button class="btn btn-secondary" onclick="closeBenefitModal()">ยกเลิก</button>
       <button class="btn btn-primary" id="confirmBenefitBtn" onclick="confirmUseBenefit()">ยืนยันใช้สิทธิ์</button>
@@ -624,11 +620,9 @@
 <div id="redeemModal" class="modal-overlay" onclick="handleRedeemOverlayClick(event)">
   <div class="modal-card">
     <div class="modal-title">รายละเอียดการแลกคะแนน</div>
-
     <div class="modal-text">
       <p>การแลกคะแนนเพื่อใช้เป็นส่วนลดสินค้าไม่สามารถใช้พร้อมกับโปรโมชั่นอื่นได้</p>
     </div>
-
     <div class="modal-actions">
       <button class="btn btn-secondary" onclick="closeRedeemModal()">ยกเลิก</button>
       <button class="btn btn-primary" id="confirmRedeemBtn" onclick="confirmRedeemReward()">ยืนยันใช้คะแนน</button>
@@ -642,6 +636,10 @@
     <div class="modal-title">แลกคะแนนสำเร็จ</div>
     <div class="modal-text">
       <p id="redeemSuccessRefText">เลขอ้างอิง : -</p>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeRedeemSuccessModal()">ปิด</button>
+      <button class="btn btn-primary" onclick="goToRedemptionDetail()">ดูรายละเอียด</button>
     </div>
   </div>
 </div>
@@ -1065,6 +1063,10 @@ function openRedeemSuccessModal(refCode){
 
 function closeRedeemSuccessModal(){
   document.getElementById('redeemSuccessModal').classList.remove('show');
+}
+
+function goToRedemptionDetail(){
+  closeRedeemSuccessModal();
   switchTab('redemption');
 }
 
