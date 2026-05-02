@@ -23,6 +23,10 @@
       --used-text:#c05a74;
       --unused-bg:#eef2f7;
       --unused-text:#4b5563;
+      --tab-bg:#ffffff;
+      --tab-active:#4a4a4a;
+      --tab-active-text:#ffffff;
+      --tab-border:#d1d5db;
     }
 
     *{ box-sizing:border-box; }
@@ -227,7 +231,8 @@
     button,
     .btn-primary,
     .btn-secondary,
-    .benefit-btn{
+    .benefit-btn,
+    .redeem-btn{
       background:var(--history-head);
       color:#fff;
       border:none;
@@ -328,7 +333,8 @@
       color:var(--used-text);
     }
 
-    .benefit-btn{
+    .benefit-btn,
+    .redeem-btn{
       margin-top:8px;
       font-size:15px;
       border-radius:12px;
@@ -407,6 +413,43 @@
       border:1px solid #e5e7eb !important;
     }
 
+    .tab-menu-wrap{
+      margin-bottom:18px;
+    }
+
+    .tab-menu{
+      display:grid;
+      grid-template-columns:1fr 1fr 1fr;
+      gap:10px;
+    }
+
+    .tab-btn{
+      width:100%;
+      border:1px solid var(--tab-border);
+      background:var(--tab-bg);
+      color:#374151;
+      font-size:15px;
+      font-weight:700;
+      padding:12px 10px;
+      border-radius:14px;
+      cursor:pointer;
+      margin:0;
+    }
+
+    .tab-btn.active{
+      background:var(--tab-active);
+      color:var(--tab-active-text);
+      border-color:var(--tab-active);
+    }
+
+    .tab-panel{
+      display:none;
+    }
+
+    .tab-panel.active{
+      display:block;
+    }
+
     @media (max-width:640px){
       .grid-2{
         grid-template-columns:1fr;
@@ -423,6 +466,10 @@
 
       .detail-label{
         min-width:auto;
+      }
+
+      .tab-menu{
+        grid-template-columns:1fr;
       }
     }
 
@@ -489,24 +536,38 @@
       </div>
     </div>
 
-    <div class="card">
-      <div class="history-head">ประวัติการซื้อ</div>
-      <div class="section-body">
-        <div id="historyInfo"></div>
+    <div class="tab-menu-wrap">
+      <div class="tab-menu">
+        <button class="tab-btn active" id="tabBtnPurchase" onclick="switchTab('purchase')">ประวัติการซื้อ</button>
+        <button class="tab-btn" id="tabBtnRedemption" onclick="switchTab('redemption')">ประวัติการใช้คะแนน</button>
+        <button class="tab-btn" id="tabBtnReward" onclick="switchTab('reward')">แลกคะแนน</button>
       </div>
     </div>
 
-    <div class="card">
-      <div class="history-head">แลกคะแนน</div>
-      <div class="section-body">
-        <div id="rewardInfo"></div>
+    <div id="tabPurchase" class="tab-panel active">
+      <div class="card">
+        <div class="history-head">ประวัติการซื้อ</div>
+        <div class="section-body">
+          <div id="historyInfo"></div>
+        </div>
       </div>
     </div>
 
-    <div class="card">
-      <div class="history-head">ประวัติการใช้คะแนน</div>
-      <div class="section-body">
-        <div id="redemptionInfo"></div>
+    <div id="tabRedemption" class="tab-panel">
+      <div class="card">
+        <div class="history-head">ประวัติการใช้คะแนน</div>
+        <div class="section-body">
+          <div id="redemptionInfo"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="tabReward" class="tab-panel">
+      <div class="card">
+        <div class="history-head">แลกคะแนน</div>
+        <div class="section-body">
+          <div id="rewardInfo"></div>
+        </div>
       </div>
     </div>
 
@@ -530,12 +591,28 @@
   </div>
 </div>
 
+<div id="redeemModal" class="modal-overlay" onclick="handleRedeemOverlayClick(event)">
+  <div class="modal-card">
+    <div class="modal-title">รายละเอียดการแลกคะแนน</div>
+
+    <div class="modal-text">
+      <p>การแลกคะแนนเพื่อใช้เป็นส่วนลดสินค้าไม่สามารถใช้พร้อมกับโปรโมชั่นอื่นได้</p>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeRedeemModal()">ยกเลิก</button>
+      <button class="btn btn-primary" id="confirmRedeemBtn" onclick="confirmRedeemReward()">ยืนยันใช้คะแนน</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const LIFF_ID = '2009688951-wJWIj6F0';
 const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbxqOq3DHuVVaqPp5ppmMs66JtkVVsPGZFHT7-TGCu1VgQnPmJRVLZzDgL9in2nTNu0/exec';
 
 let currentLineUserId = '';
 let currentBenefitRowNo = 0;
+let currentRedeemRewardId = '';
 
 function setLoading(text){
   document.getElementById('loading').classList.remove('hidden');
@@ -638,6 +715,22 @@ function focusBirthDate(){
   el.click();
 }
 
+function switchTab(tabName){
+  const tabs = ['purchase', 'redemption', 'reward'];
+
+  tabs.forEach(name => {
+    document.getElementById('tab' + capitalize(name)).classList.remove('active');
+    document.getElementById('tabBtn' + capitalize(name)).classList.remove('active');
+  });
+
+  document.getElementById('tab' + capitalize(tabName)).classList.add('active');
+  document.getElementById('tabBtn' + capitalize(tabName)).classList.add('active');
+}
+
+function capitalize(text){
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
 async function apiGet(params){
   const url = new URL(API_BASE_URL);
   Object.keys(params).forEach(k => url.searchParams.set(k, params[k]));
@@ -696,6 +789,8 @@ function renderData(result){
   hideLoading();
   document.getElementById('linkSection').classList.add('hidden');
   document.getElementById('memberSection').classList.remove('hidden');
+
+  switchTab('purchase');
 
   const customer = result.customer || {};
   const history = Array.isArray(result.history) ? result.history : [];
@@ -788,12 +883,7 @@ function renderRewards(rewards){
       <div class="purchase-body">
 
         <div class="detail-row">
-          <div class="detail-label">ประเภท</div>
-          <div class="detail-value">${escapeHtml(r.RewardType || '-')}</div>
-        </div>
-
-        <div class="detail-row">
-          <div class="detail-label">ใช้คะแนน</div>
+          <div class="detail-label">จำนวนคะแนน</div>
           <div class="detail-value">${numberFormat(r.PointsRequired)} คะแนน</div>
         </div>
 
@@ -802,41 +892,12 @@ function renderRewards(rewards){
           <div class="detail-value">${escapeHtml(r.Description || '-')}</div>
         </div>
 
-        <button class="benefit-btn" onclick="redeemReward('${String(r.RewardID || '').replace(/'/g, "\\'")}')">
+        <button class="redeem-btn" onclick="openRedeemModal('${String(r.RewardID || '').replace(/'/g, "\\'")}')">
           แลกคะแนน
         </button>
       </div>
     </div>
   `).join('');
-}
-
-async function redeemReward(rewardId){
-  const ok = confirm('ยืนยันการแลกคะแนน?');
-  if(!ok) return;
-
-  try{
-    const result = await apiGet({
-      action:'redeemReward',
-      lineUserId: currentLineUserId,
-      rewardId: rewardId
-    });
-
-    if(result.success){
-      alert(
-        'แลกคะแนนสำเร็จ\n' +
-        'รายการ: ' + (result.rewardName || '-') + '\n' +
-        'ใช้คะแนน: ' + numberFormat(result.pointsUsed) + '\n' +
-        'เลขอ้างอิง: ' + (result.refCode || '-') + '\n' +
-        'คะแนนคงเหลือ: ' + numberFormat(result.balanceAfter)
-      );
-
-      await loadMemberData();
-    }else{
-      alert(result.message || 'ไม่สามารถแลกคะแนนได้');
-    }
-  }catch(err){
-    alert(err.message || 'เกิดข้อผิดพลาด');
-  }
 }
 
 function renderRedemptionHistory(history){
@@ -853,13 +914,18 @@ function renderRedemptionHistory(history){
       <div class="purchase-body">
 
         <div class="detail-row">
-          <div class="detail-label">คะแนนที่ใช้</div>
-          <div class="detail-value">${numberFormat(item.PointsUsed)} คะแนน</div>
+          <div class="detail-label">วันที่ทำรายการ</div>
+          <div class="detail-value">${formatDate(item.RequestedAt || '')}</div>
         </div>
 
         <div class="detail-row">
           <div class="detail-label">เลขอ้างอิง</div>
           <div class="detail-value">${escapeHtml(item.RefCode || '-')}</div>
+        </div>
+
+        <div class="detail-row">
+          <div class="detail-label">จำนวนคะแนน</div>
+          <div class="detail-value">${numberFormat(item.PointsUsed)} คะแนน</div>
         </div>
 
         <div class="detail-row">
@@ -869,11 +935,6 @@ function renderRedemptionHistory(history){
               ${escapeHtml(getRedeemStatusText(item.RedeemStatus))}
             </span>
           </div>
-        </div>
-
-        <div class="detail-row">
-          <div class="detail-label">วันที่ทำรายการ</div>
-          <div class="detail-value">${formatDate(item.RequestedAt || '')}</div>
         </div>
 
       </div>
@@ -921,6 +982,54 @@ async function confirmUseBenefit(){
   }finally{
     btn.disabled = false;
     btn.textContent = 'ยืนยันใช้สิทธิ์';
+  }
+}
+
+function openRedeemModal(rewardId){
+  currentRedeemRewardId = rewardId || '';
+  document.getElementById('redeemModal').classList.add('show');
+}
+
+function closeRedeemModal(){
+  document.getElementById('redeemModal').classList.remove('show');
+  currentRedeemRewardId = '';
+}
+
+function handleRedeemOverlayClick(event){
+  if(event.target.id === 'redeemModal'){
+    closeRedeemModal();
+  }
+}
+
+async function confirmRedeemReward(){
+  const btn = document.getElementById('confirmRedeemBtn');
+  btn.disabled = true;
+  btn.textContent = 'กำลังยืนยัน...';
+
+  try{
+    const result = await apiGet({
+      action:'redeemReward',
+      lineUserId: currentLineUserId,
+      rewardId: currentRedeemRewardId
+    });
+
+    if(result.success){
+      closeRedeemModal();
+      alert(
+        'แลกคะแนนสำเร็จ\n' +
+        'เลขอ้างอิง: ' + (result.refCode || '-') + '\n' +
+        'คะแนนคงเหลือ: ' + numberFormat(result.balanceAfter)
+      );
+      await loadMemberData();
+      await loadRedemptionHistory();
+    }else{
+      alert(result.message || 'ไม่สามารถแลกคะแนนได้');
+    }
+  }catch(err){
+    alert(err.message || 'เกิดข้อผิดพลาด');
+  }finally{
+    btn.disabled = false;
+    btn.textContent = 'ยืนยันใช้คะแนน';
   }
 }
 
