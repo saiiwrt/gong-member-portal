@@ -16,7 +16,7 @@
       --brand:#191919;
       --brand-text:#ffffff;
       --soft:#f9fafb;
-      --section-dark:#191919;
+      --section-dark:#262626;
       --action-btn:#4b4b4b;
       --action-btn-text:#ffffff;
       --shadow:0 4px 18px rgba(0,0,0,.06);
@@ -25,9 +25,9 @@
       --used-text:#c05a74;
       --unused-bg:#eef2f7;
       --unused-text:#4b5563;
-      --tab-idle:#c7c8c9;
-      --tab-idle-text:#111111;
-      --tab-active:#191919;
+      --tab-idle:#dbdbdb;
+      --tab-idle-text:#000000;
+      --tab-active:#262626;
       --tab-active-text:#ffffff;
     }
 
@@ -419,9 +419,9 @@
     }
 
     .btn-secondary{
-      background:#f3f4f6 !important;
-      color:#4b5563 !important;
-      border:1px solid #e5e7eb !important;
+      background:#4b4b4b !important;
+      color:#ffffff !important;
+      border:none !important;
     }
 
     .success-close{
@@ -456,16 +456,16 @@
       border-radius:16px;
       overflow:hidden;
       box-shadow:var(--shadow);
-      background:#c7c8c9;
+      background:#dbdbdb;
     }
 
     .tab-btn{
       width:100%;
       border:none;
-      background:#c7c8c9;
-      color:#111111;
+      background:#dbdbdb;
+      color:#000000;
       font-size:20px;
-      font-weight:700;
+      font-weight:400;
       padding:16px 10px;
       cursor:pointer;
       margin:0;
@@ -478,8 +478,9 @@
     }
 
     .tab-btn.active{
-      background:#191919;
+      background:#262626;
       color:#ffffff;
+      font-weight:700;
     }
 
     .tab-panel{
@@ -637,9 +638,15 @@
     <div class="modal-text">
       <p id="redeemSuccessRefText">เลขอ้างอิง : -</p>
     </div>
-    <div class="modal-actions">
-      <button class="btn btn-secondary" onclick="closeRedeemSuccessModal()">ปิด</button>
-      <button class="btn btn-primary" onclick="goToRedemptionDetail()">ดูรายละเอียด</button>
+  </div>
+</div>
+
+<div id="messageModal" class="modal-overlay" onclick="handleMessageOverlayClick(event)">
+  <div class="modal-card">
+    <button class="success-close" onclick="closeMessageModal()">×</button>
+    <div class="modal-title" id="messageModalTitle">แจ้งเตือน</div>
+    <div class="modal-text">
+      <p id="messageModalText">-</p>
     </div>
   </div>
 </div>
@@ -1013,33 +1020,6 @@ function handleBenefitOverlayClick(event){
   }
 }
 
-async function confirmUseBenefit(){
-  const btn = document.getElementById('confirmBenefitBtn');
-  btn.disabled = true;
-  btn.textContent = 'กำลังยืนยัน...';
-
-  try{
-    const result = await apiGet({
-      action:'useBenefit',
-      lineUserId: currentLineUserId,
-      rowNo: currentBenefitRowNo
-    });
-
-    if(result.success){
-      closeBenefitModal();
-      alert(result.message || 'ยืนยันใช้สิทธิ์เรียบร้อย');
-      await loadMemberData();
-    }else{
-      alert(result.message || 'ไม่สามารถใช้สิทธิ์ได้');
-    }
-  }catch(err){
-    alert(err.message || 'เกิดข้อผิดพลาด');
-  }finally{
-    btn.disabled = false;
-    btn.textContent = 'ยืนยันใช้สิทธิ์';
-  }
-}
-
 function openRedeemModal(rewardId){
   currentRedeemRewardId = rewardId || '';
   document.getElementById('redeemModal').classList.add('show');
@@ -1065,14 +1045,52 @@ function closeRedeemSuccessModal(){
   document.getElementById('redeemSuccessModal').classList.remove('show');
 }
 
-function goToRedemptionDetail(){
-  closeRedeemSuccessModal();
-  switchTab('redemption');
-}
-
 function handleRedeemSuccessOverlayClick(event){
   if(event.target.id === 'redeemSuccessModal'){
     closeRedeemSuccessModal();
+  }
+}
+
+function openMessageModal(title, text){
+  document.getElementById('messageModalTitle').textContent = title || 'แจ้งเตือน';
+  document.getElementById('messageModalText').textContent = text || '-';
+  document.getElementById('messageModal').classList.add('show');
+}
+
+function closeMessageModal(){
+  document.getElementById('messageModal').classList.remove('show');
+}
+
+function handleMessageOverlayClick(event){
+  if(event.target.id === 'messageModal'){
+    closeMessageModal();
+  }
+}
+
+async function confirmUseBenefit(){
+  const btn = document.getElementById('confirmBenefitBtn');
+  btn.disabled = true;
+  btn.textContent = 'กำลังยืนยัน...';
+
+  try{
+    const result = await apiGet({
+      action:'useBenefit',
+      lineUserId: currentLineUserId,
+      rowNo: currentBenefitRowNo
+    });
+
+    if(result.success){
+      closeBenefitModal();
+      await loadMemberData();
+      openMessageModal('ยืนยันใช้สิทธิ์เรียบร้อย', result.message || 'กรุณาติดต่อแอดมินเพื่อนัดหมายวันและเวลา');
+    }else{
+      openMessageModal('ไม่สามารถใช้สิทธิ์ได้', result.message || 'เกิดข้อผิดพลาด');
+    }
+  }catch(err){
+    openMessageModal('เกิดข้อผิดพลาด', err.message || 'เกิดข้อผิดพลาด');
+  }finally{
+    btn.disabled = false;
+    btn.textContent = 'ยืนยันใช้สิทธิ์';
   }
 }
 
@@ -1094,10 +1112,10 @@ async function confirmRedeemReward(){
       await loadRedemptionHistory();
       openRedeemSuccessModal(result.refCode || '-');
     }else{
-      alert(result.message || 'ไม่สามารถแลกคะแนนได้');
+      openMessageModal('ไม่สามารถแลกคะแนนได้', result.message || 'เกิดข้อผิดพลาด');
     }
   }catch(err){
-    alert(err.message || 'เกิดข้อผิดพลาด');
+    openMessageModal('เกิดข้อผิดพลาด', err.message || 'เกิดข้อผิดพลาด');
   }finally{
     btn.disabled = false;
     btn.textContent = 'ยืนยันใช้คะแนน';
