@@ -802,15 +802,17 @@ async function loadRedemptionHistory(){
 async function loadMemberData(){
   setLoading('กำลังตรวจสอบข้อมูลสมาชิก...');
 
-  const [memberResult, pointBalance] = await Promise.all([
-    apiGet({
-      action:'member',
-      lineUserId: currentLineUserId
-    }),
-    getPointBalance()
-  ]);
+  const result = await apiGet({
+    action:'memberHome',
+    lineUserId: currentLineUserId
+  });
 
-  renderData(memberResult, pointBalance);
+  renderData(result, Number(result.pointBalance || 0));
+
+  if(result.success){
+    renderRewards(result.rewards || []);
+    renderRedemptionHistory(result.redemptionHistory || []);
+  }
 }
 
 function renderData(result, pointBalance){
@@ -848,8 +850,6 @@ function renderData(result, pointBalance){
 
   if(history.length === 0){
     document.getElementById('historyInfo').innerHTML = `<div class="empty">ยังไม่มีประวัติการซื้อ</div>`;
-    loadRewards();
-    loadRedemptionHistory();
     return;
   }
 
@@ -901,8 +901,6 @@ function renderData(result, pointBalance){
 
   document.getElementById('historyInfo').innerHTML = html;
 
-  loadRewards();
-  loadRedemptionHistory();
 }
 
 function renderRewards(rewards){
