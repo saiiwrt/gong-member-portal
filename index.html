@@ -1035,7 +1035,15 @@ function getTierBadgeHtml(tier){
 }
 
 function renderServiceSection(serviceSummary, serviceHistory){
-  const summary = Array.isArray(serviceSummary) ? serviceSummary : [];
+  const summary = Array.isArray(serviceSummary)
+    ? serviceSummary.filter(item => {
+        const allowanceQty = Number(item.allowanceQty || 0);
+        const periodType = String(item.periodType || '').trim().toUpperCase();
+
+        return allowanceQty > 0 && periodType !== 'LOG_ONLY';
+      })
+    : [];
+  
   const history = Array.isArray(serviceHistory) ? serviceHistory : [];
 
   let html = `<div class="section-title">ประวัติการใช้บริการ</div>`;
