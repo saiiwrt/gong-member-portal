@@ -494,6 +494,47 @@
       display:block;
     }
 
+    .tier-badge{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      margin-left:8px;
+      padding:5px 10px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:800;
+      letter-spacing:.4px;
+      vertical-align:middle;
+      transform:translateY(-3px);
+    }
+
+    .tier-bronze{
+      background:#d6b58c;
+      color:#4b3218;
+    }
+
+    .tier-silver{
+      background:#e5e7eb;
+      color:#374151;
+    }
+
+    .tier-gold{
+      background:#f5c84b;
+      color:#5c3b00;
+    }
+
+    .section-title{
+      font-size:18px;
+      font-weight:800;
+      margin:0 0 12px;
+      color:#111827;
+    }
+
+    .benefit-text{
+      white-space:pre-wrap;
+      line-height:1.7;
+    }
+    
     @media (max-width:640px){
       .member-name{
         font-size:24px;
@@ -819,11 +860,110 @@ async function loadMemberData(){
   renderData(result, Number(result.pointBalance || 0));
 
   if(result.success){
-    renderRewards(result.rewards || []);
+    renderRewards(
+      result.rewards || [],
+      result.tierBenefits || [],
+      result.memberTier || 'MEMBER'
+    );
     renderRedemptionHistory(result.redemptionHistory || []);
   }
 }
 
+function getTierBadgeHtml(tier){
+  const t = String(tier || 'MEMBER').trim().toUpperCase();
+
+  if(t === 'MEMBER') return '';
+
+  const className = 'tier-' + t.toLowerCase();
+
+  return `<span class="tier-badge ${className}">${escapeHtml(t)}</span>`;
+}
+
+function renderServiceSection(serviceSummary, serviceHistory){
+  const summary = Array.isArray(serviceSummary) ? serviceSummary : [];
+  const history = Array.isArray(serviceHistory) ? serviceHistory : [];
+
+  let html = `<div class="section-title">ประวัติการใช้บริการ</div>`;
+
+  if(summary.length){
+    html += `
+      <div class="purchase-group">
+        <div class="purchase-date">สิทธิ์บริการคงเหลือ</div>
+        <div class="purchase-body">
+          ${summary.map(item => `
+            <div class="detail-row">
+              <div class="detail-label">${escapeHtml(item.serviceName || '-')}</div>
+              <div class="detail-value">
+                ใช้ไปแล้ว ${numberFormat(item.usedQty)} / ${numberFormat(item.allowanceQty)} ครั้ง<br>
+                คงเหลือ ${numberFormat(item.remainingQty)} ครั้ง
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }
+
+  if(history.length){
+    html += history.map(item => `
+      <div class="purchase-group">
+        <div class="purchase-date">${formatDate(item.serviceDate)}</div>
+        <div class="purchase-body">
+          <div class="detail-row">
+            <div class="detail-label">บริการ</div>
+            <div class="detail-value">${escapeHtml(item.serviceName || '-')}</div>
+          </div>
+
+          <div class="detail-row">
+            <div class="detail-label">จำนวน</div>
+            <div class="detail-value">${numberFormat(item.qtyUsed)} ครั้ง</div>
+          </div>
+
+          ${item.note ? `
+            <div class="detail-row">
+              <div class="detail-label">หมายเหตุ</div>
+              <div class="detail-value">${escapeHtml(item.note)}</div>
+            </div>
+          ` : ``}
+        </div>
+      </div>
+    `).join('');
+  }else{
+    html += `<div class="empty" style="margin-bottom:18px;">ยังไม่มีประวัติการใช้บริการ</div>`;
+  }
+
+  return html;
+}
+
+function renderTierBenefits(benefits, memberTier){
+  const data = Array.isArray(benefits) ? benefits : [];
+  const tier = String(memberTier || 'MEMBER').trim().toUpperCase();
+
+  if(!data.length && tier === 'MEMBER'){
+    return '';
+  }
+
+  let html = `
+    <div class="section-title">สิทธิประโยชน์สมาชิก ${tier === 'MEMBER' ? '' : escapeHtml(tier)}</div>
+  `;
+
+  if(!data.length){
+    html += `<div class="empty" style="margin-bottom:18px;">ยังไม่มีรายละเอียดสิทธิประโยชน์</div>`;
+    return html;
+  }
+
+  html += data.map(item => `
+    <div class="purchase-group">
+      <div class="purchase-date">${escapeHtml(item.sectionTitle || '-')}</div>
+      <div class="purchase-body">
+        <div class="detail-value benefit-text">${escapeHtml(item.description || '-')}</div>
+      </div>
+    </div>
+  `).join('');
+
+  return html;
+}
+  
 function renderData(result, pointBalance){
   if(!result.success){
     hideLoading();
@@ -846,9 +986,12 @@ function renderData(result, pointBalance){
 
   const customer = result.customer || {};
   const history = Array.isArray(result.history) ? result.history : [];
+  const memberTier = result.memberTier || 'MEMBER';
+  const serviceSummary = Array.isArray(result.serviceSummary) ? result.serviceSummary : [];
+  const serviceHistory = Array.isArray(result.serviceHistory) ? result.serviceHistory : [];
 
   document.getElementById('memberInfo').innerHTML = `
-    <div class="member-name">${escapeHtml(customer.name || '-')}</div>
+    <div class="member-name">${escapeHtml(customer.name || '-')} ${getTierBadgeHtml(memberTier)}</div>
     <div class="grid grid-1">
       <div class="mini-box">
         <div class="mini-label">คะแนนคงเหลือ</div>
@@ -857,13 +1000,17 @@ function renderData(result, pointBalance){
     </div>
   `;
 
+  const serviceHtml = renderServiceSection(serviceSummary, serviceHistory);
+
   if(history.length === 0){
-    document.getElementById('historyInfo').innerHTML = `<div class="empty">ยังไม่มีประวัติการซื้อ</div>`;
+    document.getElementById('historyInfo').innerHTML =
+      serviceHtml +
+      `<div class="section-title">ประวัติการซื้อ</div>` +
+      `<div class="empty">ยังไม่มีประวัติการซื้อ</div>`;
     return;
   }
 
-  let html = '';
-
+  let html = serviceHtml + `<div class="section-title">ประวัติการซื้อ</div>`;
   history.slice().reverse().forEach(item => {
     const recheckText = item.recheck || '-';
 
@@ -914,15 +1061,16 @@ function renderData(result, pointBalance){
 
 }
 
-function renderRewards(rewards){
+function renderRewards(rewards, tierBenefits = [], memberTier = 'MEMBER'){
   const box = document.getElementById('rewardInfo');
+  const benefitHtml = renderTierBenefits(tierBenefits, memberTier);
 
   if(!rewards.length){
-    box.innerHTML = `<div class="empty">ยังไม่มีรายการแลกคะแนน</div>`;
+    box.innerHTML = benefitHtml + `<div class="empty">ยังไม่มีรายการแลกคะแนนสำหรับระดับสมาชิกนี้</div>`;
     return;
   }
 
-  box.innerHTML = rewards.map(r => `
+  box.innerHTML = benefitHtml + rewards.map(r => `
     <div class="purchase-group">
       <div class="purchase-date">${escapeHtml(r.RewardName || '-')}</div>
       <div class="purchase-body">
@@ -944,7 +1092,6 @@ function renderRewards(rewards){
     </div>
   `).join('');
 }
-
 function renderRedemptionHistory(history){
   const box = document.getElementById('redemptionInfo');
 
