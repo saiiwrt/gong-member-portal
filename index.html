@@ -534,6 +534,67 @@
       white-space:pre-wrap;
       line-height:1.7;
     }
+
+    .service-summary-text{
+      font-size:16px;
+      line-height:1.8;
+      color:#111827;
+    }
+
+    .service-history-list{
+      display:flex;
+      flex-direction:column;
+      gap:14px;
+    }
+
+    .service-history-item{
+      padding:12px 0;
+      border-bottom:1px solid #eceff3;
+    }
+
+    .service-history-item:last-child{
+      border-bottom:none;
+      padding-bottom:0;
+    }
+
+    .service-history-row{
+      display:flex;
+      gap:10px;
+      margin-bottom:6px;
+      align-items:flex-start;
+    }
+
+    .service-history-label{
+      min-width:70px;
+      color:var(--muted);
+      font-size:15px;
+      font-weight:700;
+      flex-shrink:0;
+    }
+
+    .service-history-value{
+      flex:1;
+      font-size:16px;
+      line-height:1.6;
+      word-break:break-word;
+    }
+
+    .section-divider{
+      border-top:3px solid #e5e7eb;
+      margin:28px 0 22px;
+      padding-top:18px;
+    }
+
+@media (max-width:640px){
+  .service-history-row{
+    flex-direction:column;
+    gap:2px;
+  }
+
+  .service-history-label{
+    min-width:auto;
+  }
+}
     
     @media (max-width:640px){
       .member-name{
@@ -885,52 +946,59 @@ function renderServiceSection(serviceSummary, serviceHistory){
 
   let html = `<div class="section-title">ประวัติการใช้บริการ</div>`;
 
+  // สรุปสิทธิ์คงเหลือ
   if(summary.length){
-    html += `
+    html += summary.map(item => `
       <div class="purchase-group">
-        <div class="purchase-date">สิทธิ์บริการคงเหลือ</div>
+        <div class="purchase-date">${escapeHtml(item.serviceName || 'Deep Clean')}</div>
         <div class="purchase-body">
-          ${summary.map(item => `
-            <div class="detail-row">
-              <div class="detail-label">${escapeHtml(item.serviceName || '-')}</div>
-              <div class="detail-value">
-                ใช้ไปแล้ว ${numberFormat(item.usedQty)} / ${numberFormat(item.allowanceQty)} ครั้ง<br>
-                คงเหลือ ${numberFormat(item.remainingQty)} ครั้ง
-              </div>
-            </div>
-          `).join('')}
-        </div>
-      </div>
-    `;
-  }
-
-  if(history.length){
-    html += history.map(item => `
-      <div class="purchase-group">
-        <div class="purchase-date">${formatDate(item.serviceDate)}</div>
-        <div class="purchase-body">
-          <div class="detail-row">
-            <div class="detail-label">บริการ</div>
-            <div class="detail-value">${escapeHtml(item.serviceName || '-')}</div>
+          <div class="service-summary-text">
+            ใช้สิทธิ์ไปแล้ว ${numberFormat(item.usedQty)}/${numberFormat(item.allowanceQty)} ครั้ง
+            (คงเหลือ ${numberFormat(item.remainingQty)} ครั้ง)
           </div>
-
-          <div class="detail-row">
-            <div class="detail-label">จำนวน</div>
-            <div class="detail-value">${numberFormat(item.qtyUsed)} ครั้ง</div>
-          </div>
-
-          ${item.note ? `
-            <div class="detail-row">
-              <div class="detail-label">หมายเหตุ</div>
-              <div class="detail-value">${escapeHtml(item.note)}</div>
-            </div>
-          ` : ``}
         </div>
       </div>
     `).join('');
-  }else{
-    html += `<div class="empty" style="margin-bottom:18px;">ยังไม่มีประวัติการใช้บริการ</div>`;
   }
+
+  // ประวัติการใช้บริการแบบรวมก้อนเดียว
+  html += `
+    <div class="purchase-group">
+      <div class="purchase-date">ประวัติการใช้บริการ</div>
+      <div class="purchase-body">
+  `;
+
+  if(history.length){
+    html += `<div class="service-history-list">`;
+
+    html += history.map(item => `
+      <div class="service-history-item">
+        <div class="service-history-row">
+          <div class="service-history-label">วันที่</div>
+          <div class="service-history-value">${formatDate(item.serviceDate)}</div>
+        </div>
+
+        <div class="service-history-row">
+          <div class="service-history-label">บริการ</div>
+          <div class="service-history-value">${escapeHtml(item.serviceName || '-')}</div>
+        </div>
+
+        <div class="service-history-row">
+          <div class="service-history-label">หมายเหตุ</div>
+          <div class="service-history-value">${escapeHtml(item.note || '-')}</div>
+        </div>
+      </div>
+    `).join('');
+
+    html += `</div>`;
+  } else {
+    html += `<div class="empty">ยังไม่มีประวัติการใช้บริการ</div>`;
+  }
+
+  html += `
+      </div>
+    </div>
+  `;
 
   return html;
 }
@@ -1005,12 +1073,17 @@ function renderData(result, pointBalance){
   if(history.length === 0){
     document.getElementById('historyInfo').innerHTML =
       serviceHtml +
-      `<div class="section-title">ประวัติการซื้อ</div>` +
-      `<div class="empty">ยังไม่มีประวัติการซื้อ</div>`;
+      `<div class="section-divider">` +
+        `<div class="section-title">ประวัติการซื้อ</div>` +
+        `<div class="empty">ยังไม่มีประวัติการซื้อ</div>` +
+      `</div>`;
     return;
   }
 
-  let html = serviceHtml + `<div class="section-title">ประวัติการซื้อ</div>`;
+  let html =
+    serviceHtml +
+    `<div class="section-divider">` +
+      `<div class="section-title">ประวัติการซื้อ</div>`;
   history.slice().reverse().forEach(item => {
     const recheckText = item.recheck || '-';
 
@@ -1057,6 +1130,7 @@ function renderData(result, pointBalance){
     `;
   });
 
+  html += `</div>`;
   document.getElementById('historyInfo').innerHTML = html;
 
 }
