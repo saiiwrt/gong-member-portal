@@ -594,27 +594,25 @@
   .service-history-label{
     min-width:auto;
   }
+
+  .member-name{
+    font-size:24px;
+  }
+
+  .detail-row{
+    flex-direction:column;
+    gap:4px;
+  }
+
+  .detail-label{
+    min-width:auto;
+  }
+
+  .tab-btn{
+    font-size:16px;
+    padding:14px 8px;
+  }
 }
-    
-    @media (max-width:640px){
-      .member-name{
-        font-size:24px;
-      }
-
-      .detail-row{
-        flex-direction:column;
-        gap:4px;
-      }
-
-      .detail-label{
-        min-width:auto;
-      }
-
-      .tab-btn{
-        font-size:16px;
-        padding:14px 8px;
-      }
-    }
   </style>
 </head>
 <body>
@@ -964,7 +962,7 @@ function renderServiceSection(serviceSummary, serviceHistory){
   // ประวัติการใช้บริการแบบรวมก้อนเดียว
   html += `
     <div class="purchase-group">
-      <div class="purchase-date">ประวัติการใช้บริการ</div>
+      <div class="purchase-date">รายการใช้บริการ</div>
       <div class="purchase-body">
   `;
 
