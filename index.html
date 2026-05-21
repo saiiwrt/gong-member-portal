@@ -1035,36 +1035,13 @@ function getTierBadgeHtml(tier){
 }
 
 function renderServiceSection(serviceSummary, serviceHistory){
-  const summary = Array.isArray(serviceSummary)
-    ? serviceSummary.filter(item => {
-        const allowanceQty = Number(item.allowanceQty || 0);
-        const periodType = String(item.periodType || '').trim().toUpperCase();
-
-        return allowanceQty > 0 && periodType !== 'LOG_ONLY';
-      })
-    : [];
-
   const history = Array.isArray(serviceHistory) ? serviceHistory : [];
 
   let html = `<div class="section-title">ประวัติการใช้บริการ</div>`;
 
-  if(summary.length){
-    html += summary.map(item => `
-      <div class="purchase-group">
-        <div class="purchase-date">${escapeHtml(item.serviceName || 'Deep Clean')}</div>
-        <div class="purchase-body">
-          <div class="service-summary-text">
-            ใช้สิทธิ์ไปแล้ว ${numberFormat(item.usedQty)}/${numberFormat(item.allowanceQty)} ครั้ง
-            (คงเหลือ ${numberFormat(item.remainingQty)} ครั้ง)
-          </div>
-        </div>
-      </div>
-    `).join('');
-  }
-
   html += `
     <div class="purchase-group">
-      <div class="purchase-date">รายการใช้บริการ</div>
+      <div class="purchase-date">รายการ</div>
       <div class="purchase-body">
   `;
 
