@@ -585,6 +585,92 @@
       padding-top:18px;
     }
 
+    .service-history-list{
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+
+    .service-history-item{
+      padding:10px 0;
+      border-bottom:1px solid #eceff3;
+    }
+
+    .service-history-item:last-child{
+      border-bottom:none;
+      padding-bottom:0;
+    }
+
+    .service-history-line{
+      font-size:16px;
+      line-height:1.7;
+      color:#111827;
+      font-weight:500;
+    }
+
+    .service-history-note{
+      font-size:15px;
+      line-height:1.7;
+      color:#4b5563;
+      margin-top:4px;
+      white-space:pre-wrap;
+      word-break:break-word;
+    }
+
+    .reward-section-divider{
+      border-top:3px solid #e5e7eb;
+      margin:28px 0 22px;
+      padding-top:18px;
+    }
+
+    .text-btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      border:none;
+      background:#4b4b4b;
+      color:#fff;
+      border-radius:12px;
+      padding:12px 16px;
+      font-size:14px;
+      font-weight:700;
+      cursor:pointer;
+      margin-top:8px;
+    }
+
+    .detail-modal-body{
+      max-height:60vh;
+      overflow-y:auto;
+      padding-right:4px;
+    }
+
+    .detail-modal-body p{
+      margin:0;
+      white-space:pre-wrap;
+      word-break:break-word;
+      line-height:1.9;
+    }
+
+@media (max-width:640px){
+  .member-name{
+    font-size:24px;
+  }
+
+  .detail-row{
+    flex-direction:column;
+    gap:4px;
+  }
+
+  .detail-label{
+    min-width:auto;
+  }
+
+  .tab-btn{
+    font-size:16px;
+    padding:14px 8px;
+  }
+}
+    
 @media (max-width:640px){
   .service-history-row{
     flex-direction:column;
@@ -659,9 +745,9 @@
 
     <div class="tab-menu-wrap">
       <div class="tab-menu">
-        <button class="tab-btn active" id="tabBtnPurchase" onclick="switchTab('purchase')">ประวัติการซื้อ</button>
-        <button class="tab-btn" id="tabBtnRedemption" onclick="switchTab('redemption')">ประวัติการใช้คะแนน</button>
-        <button class="tab-btn" id="tabBtnReward" onclick="switchTab('reward')">แลกคะแนน</button>
+        <button class="tab-btn active" id="tabBtnPurchase" onclick="switchTab('purchase')">ประวัติ</button>
+        <button class="tab-btn" id="tabBtnRedemption" onclick="switchTab('redemption')">การใช้คะแนน</button>
+        <button class="tab-btn" id="tabBtnReward" onclick="switchTab('reward')">สิทธิประโยชน์</button>
       </div>
     </div>
 
@@ -729,6 +815,16 @@
   </div>
 </div>
 
+<div id="benefitDetailModal" class="modal-overlay" onclick="handleBenefitDetailOverlayClick(event)">
+  <div class="modal-card">
+    <button class="success-close" onclick="closeBenefitDetailModal()">×</button>
+    <div class="modal-title" id="benefitDetailModalTitle">รายละเอียดเพิ่มเติม</div>
+    <div class="modal-text detail-modal-body">
+      <p id="benefitDetailModalText">-</p>
+    </div>
+  </div>
+</div>
+  
 <script>
 const LIFF_ID = '2009688951-wJWIj6F0';
 const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbxqOq3DHuVVaqPp5ppmMs66JtkVVsPGZFHT7-TGCu1VgQnPmJRVLZzDgL9in2nTNu0/exec';
@@ -944,7 +1040,6 @@ function renderServiceSection(serviceSummary, serviceHistory){
 
   let html = `<div class="section-title">ประวัติการใช้บริการ</div>`;
 
-  // สรุปสิทธิ์คงเหลือ
   if(summary.length){
     html += summary.map(item => `
       <div class="purchase-group">
@@ -959,7 +1054,6 @@ function renderServiceSection(serviceSummary, serviceHistory){
     `).join('');
   }
 
-  // ประวัติการใช้บริการแบบรวมก้อนเดียว
   html += `
     <div class="purchase-group">
       <div class="purchase-date">รายการใช้บริการ</div>
@@ -971,19 +1065,11 @@ function renderServiceSection(serviceSummary, serviceHistory){
 
     html += history.map(item => `
       <div class="service-history-item">
-        <div class="service-history-row">
-          <div class="service-history-label">วันที่</div>
-          <div class="service-history-value">${formatDate(item.serviceDate)}</div>
+        <div class="service-history-line">
+          ${formatDate(item.serviceDate)} : ${escapeHtml(item.serviceName || '-')}
         </div>
-
-        <div class="service-history-row">
-          <div class="service-history-label">บริการ</div>
-          <div class="service-history-value">${escapeHtml(item.serviceName || '-')}</div>
-        </div>
-
-        <div class="service-history-row">
-          <div class="service-history-label">หมายเหตุ</div>
-          <div class="service-history-value">${escapeHtml(item.note || '-')}</div>
+        <div class="service-history-note">
+          ${escapeHtml(item.note || '-')}
         </div>
       </div>
     `).join('');
@@ -1003,31 +1089,38 @@ function renderServiceSection(serviceSummary, serviceHistory){
 
 function renderTierBenefits(benefits, memberTier){
   const data = Array.isArray(benefits) ? benefits : [];
-  const tier = String(memberTier || 'MEMBER').trim().toUpperCase();
 
-  if(!data.length && tier === 'MEMBER'){
+  if(!data.length){
     return '';
   }
 
-  let html = `
-    <div class="section-title">สิทธิประโยชน์สมาชิก ${tier === 'MEMBER' ? '' : escapeHtml(tier)}</div>
-  `;
+  return data.map(item => {
+    const title = String(item.sectionTitle || '-').trim();
+    const description = String(item.description || '-');
 
-  if(!data.length){
-    html += `<div class="empty" style="margin-bottom:18px;">ยังไม่มีรายละเอียดสิทธิประโยชน์</div>`;
-    return html;
-  }
+    // เงื่อนไขการรับประกัน => แสดงปุ่มเปิด popup
+    if(title === 'เงื่อนไขการรับประกัน'){
+      return `
+        <div class="purchase-group">
+          <div class="purchase-date">${escapeHtml(title)}</div>
+          <div class="purchase-body">
+            <button class="text-btn" onclick="openBenefitDetailModal('${escapeHtml(title)}', ${JSON.stringify(description).replace(/"/g, '&quot;')})">
+              รายละเอียดเพิ่มเติม
+            </button>
+          </div>
+        </div>
+      `;
+    }
 
-  html += data.map(item => `
-    <div class="purchase-group">
-      <div class="purchase-date">${escapeHtml(item.sectionTitle || '-')}</div>
-      <div class="purchase-body">
-        <div class="detail-value benefit-text">${escapeHtml(item.description || '-')}</div>
+    return `
+      <div class="purchase-group">
+        <div class="purchase-date">${escapeHtml(title)}</div>
+        <div class="purchase-body">
+          <div class="detail-value benefit-text">${escapeHtml(description)}</div>
+        </div>
       </div>
-    </div>
-  `).join('');
-
-  return html;
+    `;
+  }).join('');
 }
   
 function renderData(result, pointBalance){
@@ -1137,12 +1230,20 @@ function renderRewards(rewards, tierBenefits = [], memberTier = 'MEMBER'){
   const box = document.getElementById('rewardInfo');
   const benefitHtml = renderTierBenefits(tierBenefits, memberTier);
 
+  let html = benefitHtml;
+
+  html += `
+    <div class="reward-section-divider">
+  `;
+
   if(!rewards.length){
-    box.innerHTML = benefitHtml + `<div class="empty">ยังไม่มีรายการแลกคะแนนสำหรับระดับสมาชิกนี้</div>`;
+    html += `<div class="empty">ยังไม่มีรายการสิทธิประโยชน์สำหรับระดับสมาชิกนี้</div>`;
+    html += `</div>`;
+    box.innerHTML = html;
     return;
   }
 
-  box.innerHTML = benefitHtml + rewards.map(r => `
+  html += rewards.map(r => `
     <div class="purchase-group">
       <div class="purchase-date">${escapeHtml(r.RewardName || '-')}</div>
       <div class="purchase-body">
@@ -1163,6 +1264,9 @@ function renderRewards(rewards, tierBenefits = [], memberTier = 'MEMBER'){
       </div>
     </div>
   `).join('');
+
+  html += `</div>`;
+  box.innerHTML = html;
 }
 function renderRedemptionHistory(history){
   const box = document.getElementById('redemptionInfo');
@@ -1269,6 +1373,22 @@ function handleMessageOverlayClick(event){
   }
 }
 
+function openBenefitDetailModal(title, text){
+  document.getElementById('benefitDetailModalTitle').textContent = title || 'รายละเอียดเพิ่มเติม';
+  document.getElementById('benefitDetailModalText').textContent = text || '-';
+  document.getElementById('benefitDetailModal').classList.add('show');
+}
+
+function closeBenefitDetailModal(){
+  document.getElementById('benefitDetailModal').classList.remove('show');
+}
+
+function handleBenefitDetailOverlayClick(event){
+  if(event.target.id === 'benefitDetailModal'){
+    closeBenefitDetailModal();
+  }
+}
+  
 function updateBenefitCard(rowNo){
   const card = document.querySelector(`[data-benefit-row="${Number(rowNo)}"]`);
   if(!card) return;
