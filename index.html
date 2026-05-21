@@ -1063,16 +1063,16 @@ function renderServiceSection(serviceSummary, serviceHistory){
   if(history.length){
     html += `<div class="service-history-list">`;
 
-    html += history.map(item => `
-      <div class="service-history-item">
-        <div class="service-history-line">
-          ${formatDate(item.serviceDate)} : ${escapeHtml(item.serviceName || '-')}
+    html += history.map(item => {
+      const noteText = String(item.note || '').trim();
+
+      return `
+        <div class="service-history-item">
+          <div class="service-history-line">${formatDate(item.serviceDate)} : ${escapeHtml(item.serviceName || '-')}</div>
+          <div class="service-history-note">${escapeHtml(noteText || '-')}</div>
         </div>
-        <div class="service-history-note">
-          ${escapeHtml(item.note || '-')}
-        </div>
-      </div>
-    `).join('');
+      `;
+    }).join('');
 
     html += `</div>`;
   } else {
