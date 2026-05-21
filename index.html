@@ -1123,8 +1123,13 @@ async function confirmRedeemReward(){
 
     if(result.success){
       closeRedeemModal();
+
+      // โหลดข้อมูลใหม่ครั้งเดียวพอ เพราะ loadMemberData โหลดคะแนน + ประวัติแลกคะแนนอยู่แล้ว
       await loadMemberData();
-      await loadRedemptionHistory();
+
+      // เปิดไปที่แท็บประวัติการใช้คะแนน หลังแลกสำเร็จ
+      switchTab('redemption');
+
       openRedeemSuccessModal(result.refCode || '-');
     }else{
       openMessageModal('ไม่สามารถแลกคะแนนได้', result.message || 'เกิดข้อผิดพลาด');
