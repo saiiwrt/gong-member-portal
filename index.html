@@ -4,6 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>GONU MEMBER</title>
+  <link rel="preconnect" href="https://script.google.com">
+  <link rel="preconnect" href="https://script.googleusercontent.com">
+  <link rel="preconnect" href="https://static.line-scdn.net">
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 
   <style>
@@ -1552,9 +1555,13 @@ async function linkAccount(){
 }
 
 async function initApp(){
+  const t0 = Date.now();
+
   try{
     setLoading('กำลังเริ่มต้นระบบ...');
+
     await liff.init({ liffId: LIFF_ID });
+    console.log('[GONU] after liff.init', Date.now() - t0);
 
     if(!liff.isLoggedIn()){
       setLoading('กำลังพาไปล็อกอิน LINE...');
@@ -1562,11 +1569,25 @@ async function initApp(){
       return;
     }
 
-    setLoading('กำลังดึงโปรไฟล์ LINE...');
-    const profile = await liff.getProfile();
-    currentLineUserId = profile.userId;
+    setLoading('กำลังตรวจสอบบัญชี LINE...');
+
+    // วิธีที่เร็วกว่า: เอา userId จาก ID Token ก่อน
+    const decoded = liff.getDecodedIDToken && liff.getDecodedIDToken();
+
+    if(decoded && decoded.sub){
+      currentLineUserId = decoded.sub;
+      console.log('[GONU] got userId from decoded token', Date.now() - t0);
+    }else{
+      // fallback เผื่อบางเครื่อง/บาง session ใช้ decoded token ไม่ได้
+      setLoading('กำลังดึงโปรไฟล์ LINE...');
+      const profile = await liff.getProfile();
+      currentLineUserId = profile.userId;
+      console.log('[GONU] got userId from getProfile', Date.now() - t0);
+    }
 
     await loadMemberData();
+
+    console.log('[GONU] after loadMemberData', Date.now() - t0);
 
   }catch(err){
     showError('LIFF error: ' + (err.message || String(err)));
