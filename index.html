@@ -1034,14 +1034,66 @@ function getTierBadgeHtml(tier){
   return `<span class="tier-badge ${className}">${escapeHtml(t)}</span>`;
 }
 
-const summary = Array.isArray(serviceSummary)
-  ? serviceSummary.filter(item => {
-      const allowanceQty = Number(item.allowanceQty || 0);
-      const periodType = String(item.periodType || '').trim().toUpperCase();
+function renderServiceSection(serviceSummary, serviceHistory){
+  const summary = Array.isArray(serviceSummary)
+    ? serviceSummary.filter(item => {
+        const allowanceQty = Number(item.allowanceQty || 0);
+        const periodType = String(item.periodType || '').trim().toUpperCase();
 
-      return allowanceQty > 0 && periodType !== 'LOG_ONLY';
-    })
-  : [];
+        return allowanceQty > 0 && periodType !== 'LOG_ONLY';
+      })
+    : [];
+
+  const history = Array.isArray(serviceHistory) ? serviceHistory : [];
+
+  let html = `<div class="section-title">ประวัติการใช้บริการ</div>`;
+
+  if(summary.length){
+    html += summary.map(item => `
+      <div class="purchase-group">
+        <div class="purchase-date">${escapeHtml(item.serviceName || 'Deep Clean')}</div>
+        <div class="purchase-body">
+          <div class="service-summary-text">
+            ใช้สิทธิ์ไปแล้ว ${numberFormat(item.usedQty)}/${numberFormat(item.allowanceQty)} ครั้ง
+            (คงเหลือ ${numberFormat(item.remainingQty)} ครั้ง)
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  html += `
+    <div class="purchase-group">
+      <div class="purchase-date">รายการใช้บริการ</div>
+      <div class="purchase-body">
+  `;
+
+  if(history.length){
+    html += `<div class="service-history-list">`;
+
+    html += history.map(item => {
+      const noteText = String(item.note || '').trim();
+
+      return `
+        <div class="service-history-item">
+          <div class="service-history-line">${formatDate(item.serviceDate)} : ${escapeHtml(item.serviceName || '-')}</div>
+          <div class="service-history-note">${escapeHtml(noteText || '-')}</div>
+        </div>
+      `;
+    }).join('');
+
+    html += `</div>`;
+  } else {
+    html += `<div class="empty">ยังไม่มีประวัติการใช้บริการ</div>`;
+  }
+
+  html += `
+      </div>
+    </div>
+  `;
+
+  return html;
+}
 
 function renderTierBenefits(benefits, memberTier){
   const data = Array.isArray(benefits) ? benefits : [];
