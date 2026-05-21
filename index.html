@@ -833,6 +833,9 @@ let currentLineUserId = '';
 let currentBenefitRowNo = 0;
 let currentRedeemRewardId = '';
 
+let benefitsLoaded = false;
+let benefitsLoading = false;
+
 function setLoading(text){
   document.getElementById('loading').classList.remove('hidden');
   document.getElementById('loadingText').textContent = text;
@@ -944,6 +947,10 @@ function switchTab(tabName){
 
   document.getElementById('tab' + capitalize(tabName)).classList.add('active');
   document.getElementById('tabBtn' + capitalize(tabName)).classList.add('active');
+
+  if(tabName === 'reward'){
+    loadBenefitsIfNeeded();
+  }
 }
 
 function capitalize(text){
@@ -1015,12 +1022,13 @@ async function loadMemberData(){
   renderData(result, Number(result.pointBalance || 0));
 
   if(result.success){
-    renderRewards(
-      result.rewards || [],
-      result.tierBenefits || [],
-      result.memberTier || 'MEMBER'
-    );
     renderRedemptionHistory(result.redemptionHistory || []);
+
+    document.getElementById('rewardInfo').innerHTML =
+      `<div class="empty">กดแท็บสิทธิประโยชน์เพื่อดูรายละเอียด</div>`;
+
+    benefitsLoaded = false;
+    benefitsLoading = false;
   }
 }
 
@@ -1211,6 +1219,42 @@ function renderData(result, pointBalance){
 
 }
 
+async function loadBenefitsIfNeeded(){
+  if(benefitsLoaded || benefitsLoading) return;
+
+  benefitsLoading = true;
+
+  document.getElementById('rewardInfo').innerHTML =
+    `<div class="empty">กำลังโหลดสิทธิประโยชน์...</div>`;
+
+  try{
+    const result = await apiGet({
+      action:'memberBenefits',
+      lineUserId: currentLineUserId
+    });
+
+    if(!result.success){
+      document.getElementById('rewardInfo').innerHTML =
+        `<div class="empty">${escapeHtml(result.message || 'ไม่สามารถโหลดสิทธิประโยชน์ได้')}</div>`;
+      return;
+    }
+
+    renderRewards(
+      result.rewards || [],
+      result.tierBenefits || [],
+      result.memberTier || 'MEMBER'
+    );
+
+    benefitsLoaded = true;
+
+  }catch(err){
+    document.getElementById('rewardInfo').innerHTML =
+      `<div class="empty">เกิดข้อผิดพลาดในการโหลดสิทธิประโยชน์</div>`;
+  }finally{
+    benefitsLoading = false;
+  }
+}
+  
 function renderRewards(rewards, tierBenefits = [], memberTier = 'MEMBER'){
   const box = document.getElementById('rewardInfo');
   const benefitHtml = renderTierBenefits(tierBenefits, memberTier);
@@ -1433,6 +1477,13 @@ async function confirmUseBenefit(){
   }
 }
 
+function updatePointBalance(balance){
+  const el = document.querySelector('#memberInfo .mini-value');
+  if(el){
+    el.textContent = numberFormat(balance);
+  }
+}
+  
 async function confirmRedeemReward(){
   const btn = document.getElementById('confirmRedeemBtn');
   btn.disabled = true;
@@ -1448,13 +1499,19 @@ async function confirmRedeemReward(){
     if(result.success){
       closeRedeemModal();
 
-      // โหลดข้อมูลใหม่ครั้งเดียวพอ เพราะ loadMemberData โหลดคะแนน + ประวัติแลกคะแนนอยู่แล้ว
-      await loadMemberData();
+      if(result.balanceAfter !== undefined){
+        updatePointBalance(result.balanceAfter);
+      }
 
-      // เปิดไปที่แท็บประวัติการใช้คะแนน หลังแลกสำเร็จ
+      await loadRedemptionHistory();
+
       switchTab('redemption');
 
       openRedeemSuccessModal(result.refCode || '-');
+
+      // ให้ครั้งถัดไปที่กดแท็บสิทธิประโยชน์ โหลดใหม่ เผื่อคะแนนเปลี่ยน
+      benefitsLoaded = false;
+
     }else{
       openMessageModal('ไม่สามารถแลกคะแนนได้', result.message || 'เกิดข้อผิดพลาด');
     }
