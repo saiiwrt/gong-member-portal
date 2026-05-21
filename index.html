@@ -756,8 +756,17 @@ function capitalize(text){
 
 async function apiGet(params){
   const url = new URL(API_BASE_URL);
+
   Object.keys(params).forEach(k => url.searchParams.set(k, params[k]));
-  const res = await fetch(url.toString());
+
+  // กัน browser / LIFF ใช้ response เก่า
+  url.searchParams.set('_ts', Date.now());
+
+  const res = await fetch(url.toString(), {
+    method: 'GET',
+    cache: 'no-store'
+  });
+
   return await res.json();
 }
 
@@ -859,7 +868,7 @@ function renderData(result, pointBalance){
     const recheckText = item.recheck || '-';
 
     html += `
-      <div class="purchase-group">
+      <div class="purchase-group" data-benefit-row="${Number(item.rowNo)}">
         <div class="purchase-date">วันที่ซื้อ: ${formatDate(item.date)}</div>
         <div class="purchase-body">
 
@@ -886,13 +895,15 @@ function renderData(result, pointBalance){
           <div class="detail-row">
             <div class="detail-label">สิทธิ์ตรวจสายตา</div>
             <div class="detail-value">
-              <span class="${getRecheckBadgeClass(recheckText)}">${escapeHtml(recheckText)}</span>
+              <span class="benefit-status ${getRecheckBadgeClass(recheckText)}">${escapeHtml(recheckText)}</span>
             </div>
           </div>
 
-          ${item.canUseBenefit ? `
-            <button class="benefit-btn" onclick="openBenefitModal(${Number(item.rowNo)})">ใช้สิทธิ์ตรวจวัดสายตา</button>
-          ` : ``}
+          <div class="benefit-action">
+            ${item.canUseBenefit ? `
+              <button class="benefit-btn" onclick="openBenefitModal(${Number(item.rowNo)})">ใช้สิทธิ์ตรวจวัดสายตา</button>
+            ` : ``}
+          </div>
 
         </div>
       </div>
@@ -1039,8 +1050,26 @@ function handleMessageOverlayClick(event){
   }
 }
 
+function updateBenefitCard(rowNo){
+  const card = document.querySelector(`[data-benefit-row="${Number(rowNo)}"]`);
+  if(!card) return;
+
+  const statusEl = card.querySelector('.benefit-status');
+  if(statusEl){
+    statusEl.textContent = 'ใช้สิทธิ์เรียบร้อย';
+    statusEl.className = 'benefit-status status-badge status-used';
+  }
+
+  const actionEl = card.querySelector('.benefit-action');
+  if(actionEl){
+    actionEl.innerHTML = '';
+  }
+}  
+  
 async function confirmUseBenefit(){
   const btn = document.getElementById('confirmBenefitBtn');
+  const usedRowNo = currentBenefitRowNo;
+
   btn.disabled = true;
   btn.textContent = 'กำลังยืนยัน...';
 
@@ -1048,16 +1077,30 @@ async function confirmUseBenefit(){
     const result = await apiGet({
       action:'useBenefit',
       lineUserId: currentLineUserId,
-      rowNo: currentBenefitRowNo
+      rowNo: usedRowNo
     });
 
     if(result.success){
       closeBenefitModal();
-      await loadMemberData();
-      openMessageModal('ยืนยันใช้สิทธิ์เรียบร้อย', result.message || 'กรุณาติดต่อแอดมินเพื่อนัดหมายวันและเวลา');
-    }else{
-      openMessageModal('ไม่สามารถใช้สิทธิ์ได้', result.message || 'เกิดข้อผิดพลาด');
+
+      // อัปเดตหน้าจอทันที ไม่รอโหลดข้อมูลใหม่
+      updateBenefitCard(usedRowNo);
+
+      openMessageModal(
+        'ยืนยันใช้สิทธิ์เรียบร้อย',
+        result.message || 'กรุณาติดต่อแอดมินเพื่อนัดหมายวันและเวลา'
+      );
+
+      return;
     }
+
+    if(result.recheck === 'ใช้สิทธิ์เรียบร้อย' || result.canUseBenefit === false){
+      closeBenefitModal();
+      updateBenefitCard(usedRowNo);
+    }
+
+    openMessageModal('ไม่สามารถใช้สิทธิ์ได้', result.message || 'เกิดข้อผิดพลาด');
+
   }catch(err){
     openMessageModal('เกิดข้อผิดพลาด', err.message || 'เกิดข้อผิดพลาด');
   }finally{
