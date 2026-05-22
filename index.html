@@ -511,19 +511,28 @@
       transform:translateY(-3px);
     }
 
+   .tier-member{
+      background:#f1f3f5;
+      color:#8b929b;
+      border:1px solid #e1e5e9;
+    }
+
     .tier-bronze{
       background:#d6b58c;
       color:#4b3218;
+      border:1px solid #c49b68;
     }
 
     .tier-silver{
-      background:#e5e7eb;
-      color:#374151;
+      background:linear-gradient(135deg, #f8fafc 0%, #d9dee7 45%, #f1f5f9 100%);
+      color:#3f4752;
+      border:1px solid #c4ccd8;
     }
 
     .tier-gold{
       background:#f5c84b;
       color:#5c3b00;
+      border:1px solid #d9a900;
     }
 
     .section-title{
@@ -1036,9 +1045,6 @@ async function loadMemberData(){
 
 function getTierBadgeHtml(tier){
   const t = String(tier || 'MEMBER').trim().toUpperCase();
-
-  if(t === 'MEMBER') return '';
-
   const className = 'tier-' + t.toLowerCase();
 
   return `<span class="tier-badge ${className}">${escapeHtml(t)}</span>`;
