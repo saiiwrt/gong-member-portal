@@ -950,9 +950,6 @@ function switchTab(tabName){
 
   document.getElementById('tab' + capitalize(tabName)).classList.add('active');
   document.getElementById('tabBtn' + capitalize(tabName)).classList.add('active');
-
-  if(tabName === 'reward'){
-    loadBenefitsIfNeeded();
   }
 }
 
@@ -1025,12 +1022,15 @@ async function loadMemberData(){
   renderData(result, Number(result.pointBalance || 0));
 
   if(result.success){
+    renderRewards(
+      result.rewards || [],
+      result.tierBenefits || [],
+      result.memberTier || 'MEMBER'
+    );
+
     renderRedemptionHistory(result.redemptionHistory || []);
 
-    document.getElementById('rewardInfo').innerHTML =
-      `<div class="empty">กดแท็บสิทธิประโยชน์เพื่อดูรายละเอียด</div>`;
-
-    benefitsLoaded = false;
+    benefitsLoaded = true;
     benefitsLoading = false;
   }
 }
@@ -1220,42 +1220,6 @@ function renderData(result, pointBalance){
   html += `</div>`;
   document.getElementById('historyInfo').innerHTML = html;
 
-}
-
-async function loadBenefitsIfNeeded(){
-  if(benefitsLoaded || benefitsLoading) return;
-
-  benefitsLoading = true;
-
-  document.getElementById('rewardInfo').innerHTML =
-    `<div class="empty">กำลังโหลดสิทธิประโยชน์...</div>`;
-
-  try{
-    const result = await apiGet({
-      action:'memberBenefits',
-      lineUserId: currentLineUserId
-    });
-
-    if(!result.success){
-      document.getElementById('rewardInfo').innerHTML =
-        `<div class="empty">${escapeHtml(result.message || 'ไม่สามารถโหลดสิทธิประโยชน์ได้')}</div>`;
-      return;
-    }
-
-    renderRewards(
-      result.rewards || [],
-      result.tierBenefits || [],
-      result.memberTier || 'MEMBER'
-    );
-
-    benefitsLoaded = true;
-
-  }catch(err){
-    document.getElementById('rewardInfo').innerHTML =
-      `<div class="empty">เกิดข้อผิดพลาดในการโหลดสิทธิประโยชน์</div>`;
-  }finally{
-    benefitsLoading = false;
-  }
 }
   
 function renderRewards(rewards, tierBenefits = [], memberTier = 'MEMBER'){
@@ -1513,7 +1477,7 @@ async function confirmRedeemReward(){
       openRedeemSuccessModal(result.refCode || '-');
 
       // ให้ครั้งถัดไปที่กดแท็บสิทธิประโยชน์ โหลดใหม่ เผื่อคะแนนเปลี่ยน
-      benefitsLoaded = false;
+      benefitsLoaded = true;
 
     }else{
       openMessageModal('ไม่สามารถแลกคะแนนได้', result.message || 'เกิดข้อผิดพลาด');
