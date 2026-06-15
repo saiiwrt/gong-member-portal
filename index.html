@@ -1099,14 +1099,23 @@ function renderTierBenefits(benefits, memberTier){
     const title = String(item.sectionTitle || '-').trim();
     const description = String(item.description || '-');
 
-    // เงื่อนไขการรับประกัน => แสดงปุ่มเปิด popup
-    if(title === 'เงื่อนไขการรับประกัน'){
+    const isWarranty =
+      title === 'เงื่อนไขการรับประกัน' ||
+      title.includes('รับประกัน') ||
+      title.includes('ประกัน');
+
+    if(isWarranty){
       return `
         <div class="purchase-group">
           <div class="purchase-date">${escapeHtml(title)}</div>
           <div class="purchase-body">
-            <button class="text-btn" onclick="openBenefitDetailModal('${escapeHtml(title)}', ${JSON.stringify(description).replace(/"/g, '&quot;')})">
-              รายละเอียดเพิ่มเติม
+            <button
+              class="text-btn"
+              data-title="${escapeHtml(title)}"
+              data-description="${escapeHtml(description)}"
+              onclick="openBenefitDetailFromButton(this)"
+            >
+              อ่านเงื่อนไขการรับประกัน
             </button>
           </div>
         </div>
@@ -1122,6 +1131,13 @@ function renderTierBenefits(benefits, memberTier){
       </div>
     `;
   }).join('');
+}
+
+function openBenefitDetailFromButton(btn){
+  const title = btn.getAttribute('data-title') || 'รายละเอียดเพิ่มเติม';
+  const text = btn.getAttribute('data-description') || '-';
+
+  openBenefitDetailModal(title, text);
 }
   
 function renderData(result, pointBalance){
