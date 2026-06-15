@@ -650,6 +650,17 @@
       margin-top:8px;
     }
 
+    .warranty-button-list{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+
+    .warranty-button-list .text-btn{
+      width:100%;
+      margin-top:0;
+    }
+
     .detail-modal-body{
       max-height:60vh;
       overflow-y:auto;
@@ -1088,6 +1099,36 @@ function renderServiceSection(serviceSummary, serviceHistory){
   return html;
 }
 
+function isWarrantyTitle(title){
+  const t = String(title || '').trim();
+  return (
+    t.includes('เงื่อนไขการรับประกัน') ||
+    t.includes('รับประกัน') ||
+    t.toUpperCase().includes('WARRANTY')
+  );
+}
+
+function getWarrantyButtonLabel(title){
+  const t = String(title || '').toUpperCase();
+
+  if(t.includes('GONU')){
+    return 'รายละเอียด กรอบ GONU';
+  }
+
+  if(t.includes('BRANDNAME') || t.includes('BRAND')){
+    return 'รายละเอียด กรอบ BRANDNAME';
+  }
+
+  return 'อ่านเงื่อนไขการรับประกัน';
+}
+
+function openBenefitDetailFromButton(btn){
+  const title = btn.getAttribute('data-title') || 'รายละเอียดเพิ่มเติม';
+  const text = btn.getAttribute('data-description') || '-';
+
+  openBenefitDetailModal(title, text);
+}
+
 function renderTierBenefits(benefits, memberTier){
   const data = Array.isArray(benefits) ? benefits : [];
 
@@ -1095,28 +1136,52 @@ function renderTierBenefits(benefits, memberTier){
     return '';
   }
 
+  const warrantyItems = data
+    .map(item => ({
+      title: String(item.sectionTitle || '-').trim(),
+      description: String(item.description || '-')
+    }))
+    .filter(item => isWarrantyTitle(item.title))
+    .sort((a, b) => {
+      const getOrder = (title) => {
+        const t = String(title || '').toUpperCase();
+        if(t.includes('GONU')) return 1;
+        if(t.includes('BRANDNAME') || t.includes('BRAND')) return 2;
+        return 99;
+      };
+
+      return getOrder(a.title) - getOrder(b.title);
+    });
+
+  let warrantyRendered = false;
+
   return data.map(item => {
     const title = String(item.sectionTitle || '-').trim();
     const description = String(item.description || '-');
 
-    const isWarranty =
-      title === 'เงื่อนไขการรับประกัน' ||
-      title.includes('รับประกัน') ||
-      title.includes('ประกัน');
+    if(isWarrantyTitle(title)){
+      if(warrantyRendered){
+        return '';
+      }
 
-    if(isWarranty){
+      warrantyRendered = true;
+
       return `
         <div class="purchase-group">
-          <div class="purchase-date">${escapeHtml(title)}</div>
+          <div class="purchase-date">เงื่อนไขการรับประกัน</div>
           <div class="purchase-body">
-            <button
-              class="text-btn"
-              data-title="${escapeHtml(title)}"
-              data-description="${escapeHtml(description)}"
-              onclick="openBenefitDetailFromButton(this)"
-            >
-              รายละเอียดการรับประกัน
-            </button>
+            <div class="warranty-button-list">
+              ${warrantyItems.map(w => `
+                <button
+                  class="text-btn"
+                  data-title="${escapeHtml(w.title)}"
+                  data-description="${escapeHtml(w.description)}"
+                  onclick="openBenefitDetailFromButton(this)"
+                >
+                  ${escapeHtml(getWarrantyButtonLabel(w.title))}
+                </button>
+              `).join('')}
+            </div>
           </div>
         </div>
       `;
@@ -1132,7 +1197,6 @@ function renderTierBenefits(benefits, memberTier){
     `;
   }).join('');
 }
-
 function openBenefitDetailFromButton(btn){
   const title = btn.getAttribute('data-title') || 'รายละเอียดเพิ่มเติม';
   const text = btn.getAttribute('data-description') || '-';
@@ -1390,16 +1454,35 @@ function handleMessageOverlayClick(event){
   }
 }
 
+function resetBenefitDetailModalScroll(){
+  const modal = document.getElementById('benefitDetailModal');
+  if(!modal) return;
+
+  const body = modal.querySelector('.detail-modal-body');
+  const card = modal.querySelector('.modal-card');
+
+  if(body) body.scrollTop = 0;
+  if(card) card.scrollTop = 0;
+}
+
 function openBenefitDetailModal(title, text){
   document.getElementById('benefitDetailModalTitle').textContent = title || 'รายละเอียดเพิ่มเติม';
   document.getElementById('benefitDetailModalText').textContent = text || '-';
-  document.getElementById('benefitDetailModal').classList.add('show');
+
+  const modal = document.getElementById('benefitDetailModal');
+  modal.classList.add('show');
+
+  resetBenefitDetailModalScroll();
+
+  requestAnimationFrame(() => {
+    resetBenefitDetailModalScroll();
+  });
 }
 
 function closeBenefitDetailModal(){
+  resetBenefitDetailModalScroll();
   document.getElementById('benefitDetailModal').classList.remove('show');
 }
-
 function handleBenefitDetailOverlayClick(event){
   if(event.target.id === 'benefitDetailModal'){
     closeBenefitDetailModal();
