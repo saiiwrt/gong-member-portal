@@ -1102,8 +1102,8 @@ function renderServiceSection(serviceSummary, serviceHistory){
 function isWarrantyTitle(title){
   const t = String(title || '').trim();
   return (
-    t.includes('เงื่อนไขการรับประกัน') ||
-    t.includes('รับประกัน') ||
+    t.includes('เงื่อนไขการรับประกัน GONU') ||
+    t.includes('เงื่อนไขการรับประกัน BRANDNAME') ||
     t.toUpperCase().includes('WARRANTY')
   );
 }
